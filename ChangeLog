@@ -1,0 +1,8 @@
+Revision history for Test-Parser.
+
+	- Added Test::Parser, created by h2xs via addpm 1.00
+1.02  Wed Oct 19 17:44:12 2005
+	- original version; created by sdist 1.11
+
+
+

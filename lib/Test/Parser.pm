@@ -12,6 +12,10 @@ displays in an XML syntax.
     or die $parser->error(), "\n";
  printf("Num Errors:    %8d\n", $parser->num_errors());
  printf("Num Warnings:  %8d\n", $parser->num_warnings());
+ printf("Num Executed:  %8d\n", $parser->num_executed());
+ printf("Num Passed:    %8d\n", $parser->num_passed());
+ printf("Num Failed:    %8d\n", $parser->num_failed());
+ printf("Num Skipped:   %8d\n", $parser->num_skipped());
 
  printf("\nErrors:\n");
  foreach my $err ($parser->errors()) {
@@ -47,10 +51,11 @@ use File::Basename;
 
 use fields qw(
               name
+              type
               path
               warnings
               errors
-              num_executed
+              testcases
               num_passed
               num_failed
               num_skipped
@@ -70,9 +75,10 @@ sub new {
     my $class = ref($this) || $this;
     my $self = bless [\%FIELDS], $class;
 
+    $self->{type}          = 'unit';
     $self->{warnings}      = [];
     $self->{errors}        = [];
-    $self->{num_executed}  = 0;
+    $self->{testcases}     = [];
     $self->{num_passed}    = 0;
     $self->{num_failed}    = 0;
     $self->{num_skipped}   = 0;
@@ -86,6 +92,21 @@ sub name {
         $self->{name} = @_;
     }
     return $self->{name};
+}
+
+=head3 type()
+
+Gets/sets the testsuite type.  Valid values include the following:
+
+unit, regression, load, integration, boundary, negative, stress, demo, standards
+
+=cut
+sub type {
+    my $self =shift;
+    if (@_) {
+        $self->{type} = @_;
+    }
+    return $self->{type};
 }
 
 sub path {
@@ -124,9 +145,18 @@ sub num_errors {
     return 0 + @{$self->errors()};
 }
 
+sub testcases {
+    my $self = shift;
+    if (@_) {
+        $self->{testcases} = shift;
+    }
+    $self->{testcases} ||= [];
+    return $self->{testcases};
+}
+
 sub num_executed {
     my $self = shift;
-    return $self->{num_executed};
+    return 0 + @{$self->testcases()};
 }
 
 sub num_passed {

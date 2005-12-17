@@ -1,4 +1,4 @@
-# $Id: 00_initialize.t.tt2,v 1.1 2004/09/16 22:46:42 bryce Exp $
+# $Id: 00_initialize.t,v 1.1.1.1 2005/12/09 00:07:19 bryce Exp $
 
 use strict;
 use Test::More tests => 2;

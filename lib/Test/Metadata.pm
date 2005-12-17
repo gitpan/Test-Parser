@@ -49,6 +49,7 @@ use Test::Parser;
 
 use fields qw(
              id
+             suite_type
              total_executed
              total_passed
              total_failed
@@ -86,6 +87,11 @@ sub new {
     $self->{builds} = [];
     $self->{results} = [];
 
+    $self->{total_executed} = 0;
+    $self->{total_passed}   = 0;
+    $self->{total_failed}   = 0;
+    $self->{total_skipped}  = 0;
+
     return $self;
 }
 
@@ -111,14 +117,13 @@ sub add_build {
 sub add_test {
     my $self = shift;
     my $test = shift or return undef;
-    my $suite_type = shift || 'unit';
 
     # TODO:  Need a better way to specify the expected values
     # TODO:  Need a way to specify reports
     my $test_metadata = {
         'name'              => $test->name(),
         'path'              => $test->path(),
-        'suite_type'        => $suite_type,
+        'suite_type'        => $test->type(),
         'num_executed'      => $test->num_executed(),
         'num_passed'        => $test->num_passed(),
         'num_failed'        => $test->num_failed(),
@@ -135,6 +140,7 @@ sub add_test {
 
     push @{$self->{results}}, $test_metadata;
 }
+
 
 sub total_executed {
     my $self = shift;

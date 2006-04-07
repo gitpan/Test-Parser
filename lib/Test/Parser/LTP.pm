@@ -66,6 +66,10 @@ sub new {
     $self->{_state}        = undef;
     $self->{_current_test} = undef;
 
+    $self->{num_passed} = 0;
+    $self->{num_failed} = 0;
+    $self->{num_skipped} = 0;
+
     return $self;
 }
 
@@ -103,7 +107,7 @@ sub parse_line {
                 # Add the test to our collection and parse any additional
                 # parameters (such as stime)
                 if ($value =~ m|^([\w-]+)\s+(\w+)=(.*)$|) {
-                    $self->{_current_test}->{tag} = $1;
+                    $self->{_current_test}->{name} = $1;
                     ($key, $value) = ($2, $3);
 
                     push @{$self->{testcases}}, $self->{_current_test};
@@ -114,37 +118,49 @@ sub parse_line {
         }
 
     } elsif ($self->{_state} eq 'test_output') {
-        # For lines of the form:
+        # Has lines of the form:
         # arp01       1  BROK  :  Test broke: command arp not found
-        if ($line =~ m|^(\w+)\s+(\d+)\s+([A-Z]+)\s*:\s*(.*)$|) {
-            my ($tag, $num, $status, $message) = ($1, $2, $3, $4);
-            push @{$self->{_current_test}->{results}}, {
-                tag => $tag,
-                num => $num,
-                status => $status,
-                message => $message
-                };
-
-            if ($num == 1) {
-                if ($status eq 'PASS') {
-                    $self->{num_passed}++;
-                } elsif ($status eq 'FAIL') {
-                    $self->{num_failed}++;
-                } elsif ($status eq 'BROK') {
-                    $self->{num_skipped}++;
-                }
-            }
-        }
+#        if ($line =~ m|^(\w+)\s+(\d+)\s+([A-Z]+)\s*:\s*(.*)$|) {
+#            my ($name, $num, $status, $message) = ($1, $2, $3, $4);
+#        }
 
     } elsif ($self->{_state} eq 'execution_status') {
+        my ($termtype, $termid);
         my @items = split /\s+/, $line;
         foreach my $item (@items) {
             if ($item =~ m|^(\w+)=(.*)$|) {
                 $self->{_current_test}->{execution_status}->{$1} = $2;
+                if ($1 eq 'termination_type') {
+                    $termtype = $2;
+                } elsif ($1 eq 'termination_id') {
+                    $termid = $2;
+                }
             }
         }
 
+        if (! defined $termtype or ! defined $termid) {
+            # no op
+        } elsif ($termtype eq 'exited') {
+            if ($termid == 0) {
+                $self->{_current_test}->{result} = "PASS";
+                $self->{num_passed}++;
+            } else {
+                $self->{_current_test}->{result} = "FAIL (exit=$termid)";
+                $self->{num_failed}++;
+            }
+            $termid = undef;
+        } elsif ($termtype eq 'signaled') {
+            $self->{_current_test}->{result} = "BROK (signal=$termid)";
+            $self->{num_skipped}++;
+            $termid = undef;
+        } else {
+            $self->{_current_test}->{result} = "$termtype ($termid)";
+            $self->{num_skipped}++;
+            $termid = undef;
+        }
+
     } elsif ($self->{_state} eq 'test_end') {
+
         # We've hit the end of the test record; clear buffer
         $self->{_current_test} = undef;
 

@@ -46,6 +46,7 @@ package Test::Metadata;
 use strict;
 use warnings;
 use Test::Parser;
+use XML::Twig;
 
 use fields qw(
              id
@@ -57,6 +58,7 @@ use fields qw(
              builds
              results
              properties
+             _RETAINED_XML
              );
 
 use vars qw( %FIELDS $VERSION );
@@ -281,6 +283,74 @@ sub to_xml {
 
     warn "Substituting properties...\n";
     return $self->substitute_template($xml, $self->{properties});
+}
+
+=head2 parse($file) 
+
+Parses the given xml (TRPI) file or url and loads the data into the
+current object.
+
+=cut
+sub parse {
+    my $self = shift;
+    my $file = shift;
+
+    # TODO:  Parse XML
+    my $twig = XML::Twig->new( map_xmlns => {
+        'http://www.spikesource.com/xsd/2005/04/TRPI' => 'trpi'
+        },
+                               pretty_print => 'indented',
+                               comments     => 'keep',
+                               pi           => 'keep',
+                               keep_original_prefix => 1
+                               );
+    if ($file =~ m/n.*\n/ || (ref $file eq 'IO::Handle')) {
+        eval { $twig->parse($file); };
+        if ($@) {
+            $self->{_errormsg} = "XML::Twig died; this may mean invalid XML:  $@\n";
+            return undef;
+        }
+    } elsif ($file =~ /^http/ or $file =~ /^ftp/) {
+        eval { $twig->parseurl($file); };
+        if ($@) {
+            $self->{_errormsg} = "XML::Twig died; this may mean invalid XML:  $@\n";
+            return undef;
+        }
+    } elsif (! -e $file) {
+        $self->{_errormsg} = "No such file '$file'\n";
+        return undef;
+    } else {
+        eval { $twig->parsefile($file); };
+        if ($@) {
+            $self->{_errormsg} = "XML::Twig died; this may mean invalid XML:  $@\n";
+            return undef;
+        }
+    }
+
+    if (not ref $twig) {
+        $self->{_errormsg} = "XML::Twig did not return a valid XML object";
+        return undef;
+    }
+
+    # TODO:  Load data into structure
+    my $component = $twig->root()->first_descendant('component');
+    if (not ref $component) {
+        $self->{_errormsg} = "No 'component' element found in document";
+        return undef;
+    }
+
+    $self->{id} = '';
+    $self->{suite_type} = '';
+    $self->{total_executed} = '';
+    $self->{total_passed} = '';
+    $self->{total_failed} = '';
+    $self->{builds} = ();
+    $self->{results} = ();
+    $self->{properties} = {};
+
+    # TODO:  Extract items from the XML
+
+    return 1;
 }
 
 =head2 id()

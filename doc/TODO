@@ -1,8 +1,8 @@
 Milestone 0
 -----------
 * (DONE) Test out the LTP parser against an LTP run
-* Install onto cl023
-* Integrate use of the LTP parser into web_test_reporter
+* (DONE) Install onto cl023
+* (DONE) Integrate use of the LTP parser into web_test_reporter
 
 Milestone 1
 -----------
@@ -14,12 +14,6 @@ Milestone 1
 Milestone 2
 -----------
 * Write parser for cthon
-
-Milestone 3
------------
-
-Milestone 4 - Performance test parsing
------------
 * Conceptualize approach for parsing performance tests
 
 

@@ -59,10 +59,12 @@ use fields qw(
               num_passed
               num_failed
               num_skipped
+              outdir
+              format
               );
 
 use vars qw( %FIELDS $VERSION );
-our $VERSION = '1.00';
+our $VERSION = '1.3';
 
 =head2 new()
 
@@ -82,6 +84,8 @@ sub new {
     $self->{num_passed}    = 0;
     $self->{num_failed}    = 0;
     $self->{num_skipped}   = 0;
+    $self->{outdir}        = '.';
+    $self->{format}        = 'png';
 
     return $self;
 }
@@ -174,6 +178,22 @@ sub num_skipped {
     return $self->{num_skipped};
 }
 
+sub format {
+    my $self = shift;
+    if (@_) {
+        $self->{format} = shift;
+    }
+    return $self->{format};
+}
+
+sub outdir {
+    my $self = shift;
+    if (@_) {
+        $self->{outdir} = shift;
+    }
+    return $self->{outdir};
+}
+
 
 =head2 parse($input, [$name[, $path]])
 
@@ -208,7 +228,6 @@ sub parse {
     my ($name, $path) = @_;
 
     my $retval = 1;
-    $self->{_state} = undef;
 
     # If it's a GLOB, we're probably reading from STDIN
     if (ref($input) eq 'GLOB') {

@@ -6,14 +6,15 @@ Milestone 0
 
 Milestone 1
 -----------
-* Write parser for PyNFS
-* Integrate use of the PyNFS parser into web_test_reporter
-* Create initial Test::Parser::LHCS
-* Test running parse_lhcs on a LHCS test result file
+* (DONE) Write parser for PyNFS
+* (DONE) Create initial Test::Parser::LHCS
+* (DONE) Test running on a LHCS test result file
+* (DONE) Conceptualize approach for parsing performance tests
 
 Milestone 2
 -----------
+* Write output format to TRPI
 * Write parser for cthon
-* Conceptualize approach for parsing performance tests
+* Integrate use of the PyNFS parser into web_test_reporter
 
 

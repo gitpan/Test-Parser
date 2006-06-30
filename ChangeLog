@@ -1,5 +1,15 @@
 Revision history for Test-Parser.
 
+1.3  Thu June 29, 17:00:00 2006
+	- Added new parser for newpynfs
+	- Added new parser for readprofile
+	- Added new parser for oprofile
+	- Added new parser for vmstat
+	- Added new parser for sysctl
+	- Added new parser for PostgreSQL options
+	- Added new parser for iostat
+	- Added new parser for sar
+
 1.00  Fri Dec 16 17:52:00 2005
 	- Added new parser for LTP testruns
 	- Added test case 03 for LTP logs

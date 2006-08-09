@@ -1,0 +1,50 @@
+#!/usr/bin/perl
+
+# This script parses the output of `sysbench --test=fileio`, presenting the
+# info in a structure more ameniable to post-processing tools for test
+# reports
+# Usage:  parse_sysbench_fileio < fileio.output
+
+use strict;
+use warnings;
+use Test::Parser::SysbenchFileIO;
+
+my $parser = new Test::Parser::SysbenchFileIO
+    or die "Couldn't create Test::Parser::SysbenchFileIO object\n";
+
+$parser->parse($ARGV[0] or \*STDIN)
+    or die "Could not parse Sysbench log.\n";
+
+printf(" Num of Threads:  %15s\n", $parser->print('num_threads'));
+printf("File Open Flags:  %15s\n", $parser->print('file_open_flags'));
+printf("Number of Files:  %15s\n", $parser->print('num_files'));
+printf("      File Size:  %15s\n", $parser->print('file_size'));
+printf("Total File Size:  %15s\n", $parser->print('total_file_size'));
+printf("     Block Size:  %15s\n", $parser->print('block_size'));
+printf(" Num Random Req:  %15s\n", $parser->print('num_random_req'));
+printf("      R/W Ratio:  %15s\n", $parser->print('rw_ratio'));
+printf("   FSYNC Status:  %15s\n", $parser->fsync('status'));
+printf("     FSYNC Freq:  %15s\n", $parser->fsync('freq'));
+printf("      FSYNC End:  %15s\n", $parser->fsync('end'));
+printf("        IO Mode:  %15s\n", $parser->print('io_mode'));
+printf("     Which Test:  %15s\n", $parser->print('test_run'));
+printf("      Perf Read:  %15s\n", $parser->ops('reads'));
+printf("     Perf Write:  %15s\n", $parser->ops('writes'));
+printf("     Perf Other:  %15s\n", $parser->ops('other'));
+printf("     Perf Total:  %15s\n", $parser->ops('total'));
+printf("      Size Read:  %15s\n", $parser->ops('read'));
+printf("   Size Written:  %15s\n", $parser->ops('written'));
+printf("    Total trans:  %15s\n", $parser->ops('trans_total'));
+printf("     Trans Rate:  %15s\n", $parser->ops('trans_rate'));
+printf("   Request Exec:  %15s\n", $parser->ops('req_rate'));
+printf("     Total Time:  %15s\n", $parser->totals('time'));
+printf("   Total Events:  %15s\n", $parser->totals('events'));
+printf("     Total Exec:  %15s\n", $parser->totals('exec'));
+printf("         PR Min:  %15s\n", $parser->per_request('min'));
+printf("         PR Avg:  %15s\n", $parser->per_request('avg'));
+printf("         PR Max:  %15s\n", $parser->per_request('max'));
+printf("   95th Percent:  %15s\n", $parser->per_request('95'));
+printf("      Event Avg:  %15s\n", $parser->eventfair('avg'));
+printf("   Event StdDev:  %15s\n", $parser->eventfair('stddev'));
+printf("       Exec Avg:  %15s\n", $parser->execfair('avg'));
+printf("    Exec StdDev:  %15s\n", $parser->execfair('stddev'));

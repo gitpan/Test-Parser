@@ -1,0 +1,30 @@
+#!/usr/bin/perl
+
+# This script parses the output of `sysbench --test=cpu`, presenting the
+# info in a structure more ameniable to post-processing tools for test
+# reports
+# Usage:  parse_sysbench_cpu < cpu.output
+
+use strict;
+use warnings;
+use Test::Parser::SysbenchCPU;
+
+my $parser = new Test::Parser::SysbenchCPU
+    or die "Couldn't create Test::Parser::SysbenchCPU object\n";
+
+$parser->parse($ARGV[0] or \*STDIN)
+    or die "Could not parse Sysbench log.\n";
+
+printf("     Threads:  %15s*\n", $parser->summary('threads'));
+printf("   Max Prime:  %15s*\n", $parser->summary('maxprime'));
+printf("  Total Time:  %15s*\n", $parser->totals('time'));
+printf("Total Events:  %15s*\n", $parser->totals('events'));
+printf("  Total Exec:  %15s*\n", $parser->totals('exec'));
+printf("      PR Min:  %15s*\n", $parser->per_request('min'));
+printf("      PR Avg:  %15s*\n", $parser->per_request('avg'));
+printf("      PR Max:  %15s*\n", $parser->per_request('max'));
+printf("95th Percent:  %15s*\n", $parser->per_request('95'));
+printf("   Event Avg:  %15s*\n", $parser->eventfair('avg'));
+printf("Event StdDev:  %15s*\n", $parser->eventfair('stddev'));
+printf("    Exec Avg:  %15s*\n", $parser->execfair('avg'));
+printf(" Exec StdDev:  %15s*\n", $parser->execfair('stddev'));

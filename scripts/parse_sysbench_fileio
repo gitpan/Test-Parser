@@ -18,9 +18,16 @@ $parser->parse($ARGV[0] or \*STDIN)
 printf(" Num of Threads:  %15s\n", $parser->print('num_threads'));
 printf("File Open Flags:  %15s\n", $parser->print('file_open_flags'));
 printf("Number of Files:  %15s\n", $parser->print('num_files'));
+
 printf("      File Size:  %15s\n", $parser->print('file_size'));
+printf("File Size Units:  %15s\n", $parser->print('file_size_units'));
+
 printf("Total File Size:  %15s\n", $parser->print('total_file_size'));
+printf("  TF Size Units:  %15s\n", $parser->print('total_file_size_units'));
+
 printf("     Block Size:  %15s\n", $parser->print('block_size'));
+printf("       BS Units:  %15s\n", $parser->print('block_size_units'));
+
 printf(" Num Random Req:  %15s\n", $parser->print('num_random_req'));
 printf("      R/W Ratio:  %15s\n", $parser->print('rw_ratio'));
 printf("   FSYNC Status:  %15s\n", $parser->fsync('status'));
@@ -32,19 +39,36 @@ printf("      Perf Read:  %15s\n", $parser->ops('reads'));
 printf("     Perf Write:  %15s\n", $parser->ops('writes'));
 printf("     Perf Other:  %15s\n", $parser->ops('other'));
 printf("     Perf Total:  %15s\n", $parser->ops('total'));
+
 printf("      Size Read:  %15s\n", $parser->ops('read'));
+printf("Size Read Units:  %15s\n", $parser->ops('read_units'));
 printf("   Size Written:  %15s\n", $parser->ops('written'));
+printf("Sz Written Unit:  %15s\n", $parser->ops('written_units'));
 printf("    Total trans:  %15s\n", $parser->ops('trans_total'));
+printf(" Total tx Units:  %15s\n", $parser->ops('trans_total_units'));
 printf("     Trans Rate:  %15s\n", $parser->ops('trans_rate'));
+printf("Tran Rate Units:  %15s\n", $parser->ops('trans_rate_units'));
+
 printf("   Request Exec:  %15s\n", $parser->ops('req_rate'));
 printf("     Total Time:  %15s\n", $parser->totals('time'));
+printf("Total Time Unit:  %15s\n", $parser->totals('time_units'));
 printf("   Total Events:  %15s\n", $parser->totals('events'));
 printf("     Total Exec:  %15s\n", $parser->totals('exec'));
 printf("         PR Min:  %15s\n", $parser->per_request('min'));
+printf("   PR Min Units:  %15s\n", $parser->per_request('min_units'));
 printf("         PR Avg:  %15s\n", $parser->per_request('avg'));
+printf("   PR Avg Units:  %15s\n", $parser->per_request('avg_units'));
 printf("         PR Max:  %15s\n", $parser->per_request('max'));
+printf("   PR Max Units:  %15s\n", $parser->per_request('max_units'));
 printf("   95th Percent:  %15s\n", $parser->per_request('95'));
+printf(" 95th per Units:  %15s\n", $parser->per_request('95_units'));
 printf("      Event Avg:  %15s\n", $parser->eventfair('avg'));
 printf("   Event StdDev:  %15s\n", $parser->eventfair('stddev'));
 printf("       Exec Avg:  %15s\n", $parser->execfair('avg'));
 printf("    Exec StdDev:  %15s\n", $parser->execfair('stddev'));
+
+printf("\n         To XML:  %s\n", $parser->to_xml());;
+
+open FH, "> fileio.output";
+print FH $parser->to_xml();
+close FH;

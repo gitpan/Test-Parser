@@ -37,7 +37,7 @@ use fields qw(
               );
 
 use vars qw( %FIELDS $AUTOLOAD $VERSION );
-our $VERSION = '1.3';
+our $VERSION = '1.4';
 
 =head2 new()
 

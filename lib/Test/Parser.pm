@@ -50,9 +50,26 @@ use warnings;
 use File::Basename;
 
 use fields qw(
-              name
+              code-convention-report
+              coverage-report
+              test
+              num-datum
+              num-column
+              build
+              root
+              url
+              release
+              vendor
+              license
+              summary
+              description
+              platform
+              version
+              testname
               type
               path
+              name
+              units
               warnings
               errors
               testcases
@@ -61,10 +78,12 @@ use fields qw(
               num_skipped
               outdir
               format
+              _debug
               );
 
 use vars qw( %FIELDS $VERSION );
-our $VERSION = '1.3';
+our $VERSION = '1.4';
+use constant END_OF_RECORD => 100;
 
 =head2 new()
 
@@ -77,6 +96,9 @@ sub new {
     my $class = ref($this) || $this;
     my $self = bless [\%FIELDS], $class;
 
+    $self->{path}          = 0;
+    $self->{units}         = $class;
+    $self->{version}       = $class;
     $self->{type}          = 'unit';
     $self->{warnings}      = [];
     $self->{errors}        = [];
@@ -86,26 +108,349 @@ sub new {
     $self->{num_skipped}   = 0;
     $self->{outdir}        = '.';
     $self->{format}        = 'png';
-
+    $self->{_debug}	   = 0;
+    $self->{name}          = "";
+    $class=~s/^Test::Parser:://;
+    $self->{'testname'}    = $class;
+    $self->{'num-column'}    = 0;
+    $self->{'num-datum'}     = 0;
+    $self->{build}         = 0;
+    $self->{root}          = 0;
+    $self->{release}       = 0;
+    $self->{url}           = 0;
+    $self->{vendor}        = 0;
+    $self->{license}       = 0;
+    $self->{summary}       = 0;
+    $self->{description}   = 0;
+    $self->{platform}      = 0;
+    $self->{'coverage-report'}=0;
+    $self->{'code-convention-report'}=0;   
+ 
     return $self;
 }
 
+=head2 name()
+
+Gets/sets name parameter. user-customizable identification tag
+
+=cut
+
 sub name {
     my $self = shift;
-    if (@_) {
-        $self->{name} = @_;
+    my $my_name = shift;
+
+    if ($my_name) {
+        $self->{name} = $my_name;
     }
+
     return $self->{name};
+}
+
+=head2 testname()
+
+Gets/sets testname parameter.
+
+=cut
+
+sub testname {
+    my $self = shift;
+    my $testname = shift;
+
+    if ($testname) {
+        $self->{testname} = $testname;
+    }
+
+    return $self->{testname};
+}
+
+sub version {
+    my $self = shift;
+    my $version = shift;
+
+    if ( $version ) {
+        $self->{version} = $version;
+    }
+
+    return $self->{version};
+}
+
+sub units {
+    my $self = shift;
+    my $units = shift;
+
+    if ( $units ) {
+        $self->{units} = $units;
+    }
+
+    return $self->{units};
+}
+
+=head2 to_xml
+
+Method to print test result data from the Test::Parser object in xml format following the trpi schema. Find the trpi schema here: http://developer.osdl.org/~jdaiker/trpi_extended_proposal.xsd
+
+=cut
+
+sub to_xml {
+    my $self = shift;
+    my $xml = "";
+    my $data = $self->data();
+    my @required = qw(testname version description summary license vendor release url platform);
+    my @fields   = qw(testname version description summary license vendor release url platform root build coverage-report code-convention-report);
+
+    foreach my $field (@required) {
+        if( !$self->{$field} ) {
+            print "Missing required field: $field\n";
+            return undef;
+        }
+    }
+    $xml .= qq|<component name='$self->{testname}' version='$self->{version}'>\n|;
+    foreach my $field (@fields) {
+        if ($self->{$field}) {
+            #Special case for build / status
+            if ($field eq 'build' && $self->{build_status}) {
+                $xml .= qq| <build status='$self->{build_status}'>$self->{build}</build>\n|;
+            }
+            else {
+                $xml .= qq| <$field>$self->{$field}</$field>\n|;
+            }
+        }
+    }
+    if( $self->{test} ){
+        $xml .= qq| <test|;
+        if( $self->{test}->{'log-filename'} ){
+            $xml .= qq| log-filename=$self->{test}->{'log-filename'}|;
+        }
+        if( $self->{test}->{path} ){
+            $xml .= qq| path=$self->{test}->{path}|;
+        }
+        if( $self->{test}->{'suite-type'} ){
+            $xml .= qq| suite-type=$self->{test}->{'suite-type'}>\n|;
+        }    
+        else {
+            $xml .= qq|>\n|;
+        }
+        if( $self->{test}->{data} ){
+            $xml .= qq|  <data>\n|;
+            if( $self->{test}->{data}->{columns} ){
+                $xml .= qq|   <columns>\n|;
+
+                my %column_hash=%{$self->{test}->{data}->{columns}};
+                foreach my $column_key(sort keys %column_hash){
+                    if( $column_hash{$column_key}->{'name'} ){       
+                        $xml .= qq|    <c id="$column_key" name="$column_hash{$column_key}->{'name'}"|;
+                    }
+                    if( $column_hash{$column_key}->{units} ){
+                        $xml .= qq| units="$column_hash{$column_key}->{units}"|;
+                    }
+                    $xml .= qq|/>\n|;
+                }
+                $xml .= qq|   </columns>\n|;
+            }
+            if( $self->{test}->{data}->{datum} ){
+                my %datum_hash=%{ $self->{test}->{data}->{datum} };                 
+                foreach my $datum_key( sort keys %datum_hash ){
+                    $xml .= qq|   <datum id="$datum_key">\n|;
+                    foreach my $key_val( sort keys %{ $datum_hash{$datum_key} }){
+                        if( $key_val ){
+                            $xml .= qq|    <d id="$key_val">|;
+                            if( $self->{test}->{data}->{datum}->{$datum_key}->{$key_val} ){
+                                $xml .= qq|$self->{test}->{data}->{datum}->{$datum_key}->{$key_val}|;
+                            }
+                            $xml .= qq|</d>\n|;
+                        }
+                    }
+                    $xml .= qq|   </datum>\n|;
+                }       
+            }
+            $xml .= qq|  </data>\n|;
+        }
+        $xml .= qq| </test>\n|;
+    }
+    $xml .= qq|</component>\n|;
+    return $xml;
+}
+
+
+=head2 add_column
+
+A method that adds test column information into the data structure of the Test::Parser object appropriately. This is a helper method to be used from the parse_line method.
+
+=cut
+sub add_column { 
+    my $self=shift;
+    my $name=shift;
+    my $units=shift;
+    $self->{'num-column'}+=1;
+    my $columnId = $self->{'num-column'};
+    $self->{test}->{data}->{columns}->{$columnId}->{name}=$name;
+    $self->{test}->{data}->{columns}->{$columnId}->{units}=$units;
+    return $columnId;
+}
+
+
+=head2 add_data
+
+A method that adds data values corresponding to a given column
+
+=cut
+sub add_data {
+    my $self = shift;
+    my $val = shift;
+    my $col = shift;
+    my $temp = 1;
+    
+    if ( defined($self->{'num-datum'}) ) {
+        $temp += $self->{'num-datum'};
+    }
+
+    for(my $dumy=1; $dumy<($self->{'num-column'}+1); $dumy+=1){
+        $self->{test}->{data}->{datum}->{$temp}->{$col}= $val;
+    }
+    return;
+}
+
+
+=head2 inc_datum
+
+A method that increments the num-datum variable
+
+=cut
+sub inc_datum {
+    my $self = shift;
+    if ( defined($self->{'num-datum'}) ) {
+        $self->{'num-datum'} += 1;
+    }
+    else {
+        $self->{'num-datum'} = 1;
+    }
+    return $self->{'num_datum'};
+}
+
+
+=head2 to_dump()
+
+Function to output all data, good for debuging
+
+=cut
+sub to_dump {
+    my $self = shift;
+
+    require Data::Dumper;
+    print Data::Dumper->Dumper($self->{"data"});
+}
+
+
+=head2 set_debug($debug)
+
+Turns on debug level.  Set to 0 or undef to turn off.
+
+=cut
+sub num_data {
+    my $self =shift;
+    if (@_) {
+        $self->{num_columns} = @_;
+    }
+    return $self->{num_columns};
+}
+
+sub build {
+    my $self =shift;
+    if (@_) {
+        $self->{build} = @_;
+    }
+    return $self->{build};
+}
+
+sub root {
+    my $self =shift;
+    if (@_) {
+        $self->{root} = @_;
+    }
+    return $self->{root};
+}
+sub url {
+    my $self =shift;
+    if (@_) {
+        $self->{url} = @_;
+    }
+    return $self->{url};
+}
+
+sub release {
+    my $self =shift;
+    if (@_) {
+        $self->{release} = @_;
+    }
+    return $self->{release};
+}
+
+sub vendor {
+    my $self =shift;
+    if (@_) {
+        $self->{vendor} = @_;
+    }
+    return $self->{vendor};
+}
+
+sub license {
+    my $self =shift;
+    if (@_) {
+        $self->{license} = @_;
+    }
+    return $self->{license};
+}
+
+sub summary {
+    my $self =shift;
+    if (@_) {
+        $self->{summary} = @_;
+    }
+    return $self->{summary};
+}
+
+sub description {
+    my $self =shift;
+    if (@_) {
+        $self->{description} = @_;
+    }
+    return $self->{description};
+}
+
+sub platform {
+    my $self =shift;
+    if (@_) {
+        $self->{platform} = @_;
+    }
+    return $self->{platform};
+}
+
+sub type {
+    my $self =shift;
+    if (@_) {
+        $self->{type} = @_;
+    }
+    return $self->{type};
+}
+
+sub set_debug {
+    my $self = shift;
+
+    if (@_) {
+        $self->{_debug} = shift;
+    }
+
+    return $self->{_debug};
 }
 
 =head3 type()
 
-Gets/sets the testsuite type.  Valid values include the following:
-
+Gets or sets the testsuite type.  Valid values include the following:
 unit, regression, load, integration, boundary, negative, stress, demo, standards
 
 =cut
-sub type {
+
+sub type_2 {
     my $self =shift;
     if (@_) {
         $self->{type} = @_;
@@ -220,6 +565,20 @@ of the location of this file within the test run directory.  By default,
 if $input is a filename, 'name' and 'path' will be taken from that, else
 they'll be left blank.
 
+If the filename contains multiple test records, parse() simply parses
+the first one it finds, and then returns the constant
+Test::Parser::END_OF_RECORD.  If your input file contains multiple
+records, you probably want to call parse in the GLOB fashion.  E.g.,
+
+    my @logs;
+    open (FILE, 'my.log') or die "Couldn't open: $!\n";
+    while (FILE) {
+        my $parser = new Test::Parser;
+        $parser->parse(\*FILE);
+        push @logs, $parser;
+    }
+    close (FILE) or die "Couldn't close: $!\n";
+
 =cut
 
 sub parse {
@@ -233,12 +592,15 @@ sub parse {
     if (ref($input) eq 'GLOB') {
         while (<$input>) {
             $retval = $self->parse_line($_) || $retval;
+            last if $retval == END_OF_RECORD;
         }
     }
     # If it's a scalar and has newlines, it's probably the full text
     elsif (!ref($input) && $input =~ /\n/) {
-        foreach (split /\n/, $input) {
+        my @lines = split /\n/, $input;
+        while (shift @lines) {
             $retval = $self->parse_line($_) || $retval;
+            last if $retval == END_OF_RECORD;
         }
     }
 
@@ -252,15 +614,14 @@ sub parse {
             and return undef;
         while (<FILE>) {
             $retval = $self->parse_line($_) || $retval;
+            last if $retval eq END_OF_RECORD;
         }
         close(FILE);
     }
-    $self->{name} = $name;
     $self->{path} = $path;
 
     return $retval;
 }
-
 
 =head2 parse_line($text)
 
@@ -319,3 +680,4 @@ L<perl>, L<Test::Metadata>
 
 
 1;
+

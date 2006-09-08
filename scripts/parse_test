@@ -1,0 +1,69 @@
+#!/usr/bin/perl -I /home/joshua/crucible/Test-Parser/lib
+use Getopt::Long;
+my $testname="empty";
+my $datafile;
+my $format;
+my $debug;
+$result = GetOptions ("datafile=s" => \$datafile,    # string
+    "testname=s"   => \$testname,  # string
+    "debug=i"   => \$debug,          # flag
+    "format=s"  => \$format);      # string
+    my $module='';
+    if($testname eq "empty"){
+        die("Error: Need name of test module.\n");
+    }
+    else{
+        $module='Test::Parser::'.$testname;
+        $testname="\u$testname";
+        eval "require $module;";
+        if($@){
+            print $@;
+        }
+    }
+    my $result=new $module();
+    if($debug){
+        $result->set_debug($debug);
+    }
+    if($datafile){
+        $result->parse($datafile);
+    }
+    if($format){
+        my $printfunction="to_" . $format;
+        if(exists &{$result->$printfunction()}){     
+            print $result->$printfunction();
+        }
+        else{
+            print $result->to_xml();
+        }
+    }
+exit;
+
+sub usage {
+
+    print ("parse_test --testname=<string> --format=<string> --datafile=<string> --debug=<integer>\n");
+
+}
+
+
+__END__
+
+
+=head1 NAME
+
+boottool - tool for modifying bootloader configuration
+
+=head1 DESCRIPTION
+
+parse_test is a general script for parsing test output.
+
+=head1 OPTIONS
+
+    --testname=<String>    Test to run script on
+
+    --format=<String>    Format to turn to 
+
+    --datafile=<String>    File to find data for test
+
+    --debug-flag Debug
+
+=cut

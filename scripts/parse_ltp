@@ -23,6 +23,6 @@ print "\n";
 foreach my $test (@{$parser->testcases()}) {
     printf("%-12s  %s\n", 
            ($test->{'name'} || '?'), 
-           $test->{'result'}
+           $test->{'result'} || '?'
            );
 }

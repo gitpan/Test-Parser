@@ -1,5 +1,32 @@
 Revision history for Test-Parser.
 
+HEAD
+	Mark Wong:
+	- Updates based on base class changes
+	
+	John Daiker:
+	- Added call for to_xml() in Parser.pm
+	- Updated SysbenchCPU to use to_xml() from Parser.pm
+	- Fixes for Dbench.pm
+	- Documentation updates for perldoc compatibility
+	
+	Joshua:
+	- Dbench parser
+	- Add to_xml() routine
+	- Add more parameters to base class
+	
+	Bryce:
+	- Documentation for Dbench
+	- Added test for iozone
+	- Added new parser for iozone
+	- Added iozone_parser
+	- Added iozone tests
+	- Added new parser for sysbench cpu and sysbench fileio
+	- Renamed tests to be numerically ordered
+	- Added constant END_OF_RECORD for test parsers to return when
+	  they complete parsing a test log, but notice there's more 
+	  data to be parsed
+	
 1.3  Thu June 29, 17:00:00 2006
 	- Added new parser for newpynfs
 	- Added new parser for readprofile

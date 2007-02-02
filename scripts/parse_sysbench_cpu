@@ -15,6 +15,4 @@ my $parser = new Test::Parser::SysbenchCPU
 $parser->parse($ARGV[0] or \*STDIN)
     or die "Could not parse Sysbench log.\n";
 
-#print $parser->to_dump();
-
 print $parser->to_xml();

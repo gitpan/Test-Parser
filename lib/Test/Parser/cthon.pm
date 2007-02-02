@@ -1,17 +1,17 @@
-package Test::Parser::NewPyNfs;
+package Test::Parser::cthon;
 
 my $i=0;
 
 =head1 NAME
 
-Test::Parser::NewPyNfs - Perl module to parse output from runs of the 
-NewPyNfs testsuite.
+Test::Parser::cthon - Perl module to parse output from runs of the 
+Connectathon (CTHON) testsuite.
 
 =head1 SYNOPSIS
 
- use Test::Parser::NewPyNfs;
+ use Test::Parser::cthon;
 
- my $parser = new Test::Parser::NewPyNfs;
+ my $parser = new Test::Parser::cthon;
  $parser->parse($text);
  printf("Num Executed:  %8d\n", $parser->num_executed());
  printf("Num Passed:    %8d\n", $parser->num_passed());
@@ -23,7 +23,7 @@ and from the L<Test::Parser> baseclass.
 
 =head1 DESCRIPTION
 
-This module provides a way to extract information out of NewPyNfs test run
+This module provides a way to extract information out of CTHON test run
 output.
 
 =head1 FUNCTIONS
@@ -36,10 +36,11 @@ use strict;
 use warnings;
 use Test::Parser;
 
-@Test::Parser::NewPyNfs::ISA = qw(Test::Parser);
+@Test::Parser::cthon::ISA = qw(Test::Parser);
 use base 'Test::Parser';
 
 use fields qw(
+              _state
               _current_test
               );
 
@@ -48,7 +49,7 @@ our $VERSION = '1.4';
 
 =head2 new()
 
-Creates a new Test::Parser::NewPyNfs instance.
+Creates a new Test::Parser::cthon instance.
 Also calls the Test::Parser base class' new() routine.
 Takes no arguments.
 
@@ -56,12 +57,13 @@ Takes no arguments.
 
 sub new {
     my $class = shift;
-    my Test::Parser::NewPyNfs $self = fields::new($class);
+    my Test::Parser::cthon $self = fields::new($class);
     $self->SUPER::new();
 
-    $self->name('NewPyNfs');
+    $self->name('cthon');
     $self->type('standards');
 
+    $self->{_state}        = undef;
     $self->{_current_test} = undef;
 
     $self->{num_passed} = 0;
@@ -74,43 +76,17 @@ sub new {
 =head3
 
 Override of Test::Parser's default parse_line() routine to make it able
-to parse NewPyNfs output.
+to parse CTHON output.
 
 =cut
 sub parse_line {
     my $self = shift;
     my $line = shift;
 
-    # Change state, if appropriate
-    if (/^(\w+)\s+([\w\.]+)\s+: ([A-Z]+)$/) {
-        my ($test, $desc, $result) = ($1, $2, $3);
-        # This is a new test 
-        print "$test - $desc - $result\n";
+    $self->{_state} ||= 'begin';
 
-        # Add the previous one to the testcases list
-        push @{$self->{testcases}}, $self->{_current_test};
-
-        $self->{_current_test}->{name} = {
-            name      => $test,
-            desc      => $desc,
-            result    => $result,
-        };
-        if ($result eq "PASS") {
-            $self->{num_passed}++;
-        } elsif ($result eq "OMIT") {
-            $self->{num_skipped}++;
-        } elsif ($result eq "FAILURE") {
-            $self->{num_failed}++;
-        }
-
-    } elsif (/^\*\*\*/) {
-        # This marks the end of the test
-        $self->{_current_test} = undef;
-
-    } elsif (defined $self->{_current_test}) {
-        # The line is commentary about the test result
-
-    }
+    # TODO:  Detect change from section to section
+    # Parse out results
 
     return 1;
 }
@@ -124,7 +100,7 @@ Bryce Harrington <bryce@osdl.org>
 
 =head1 COPYRIGHT
 
-Copyright (C) 2006 Bryce Harrington.
+Copyright (C) 2005 Bryce Harrington.
 All Rights Reserved.
 
 This script is free software; you can redistribute it and/or modify it

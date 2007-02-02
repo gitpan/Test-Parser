@@ -1,14 +1,14 @@
-package Test::Parser::Iozone;
+package Test::Parser::iozone;
 
 =head1 NAME
 
-Test::Parser::Iozone - Perl module to parse output from iozone.
+Test::Parser::iozone - Perl module to parse output from iozone.
 
 =head1 SYNOPSIS
 
- use Test::Parser::Iozone;
+ use Test::Parser::iozone;
 
- my $parser = new Test::Parser::Iozone;
+ my $parser = new Test::Parser::iozone;
  $parser->parse($text);
 
 =head1 DESCRIPTION
@@ -26,9 +26,9 @@ use strict;
 use warnings;
 use Test::Parser;
 use XML::Simple;
-use Chart::Graph::Gnuplot qw(gnuplot);
+#use Chart::Graph::Gnuplot qw(gnuplot);
 
-@Test::Parser::Iozone::ISA = qw(Test::Parser);
+@Test::Parser::iozone::ISA = qw(Test::Parser);
 use base 'Test::Parser';
 
 use fields qw(
@@ -38,6 +38,7 @@ use fields qw(
               rundate
               commandline
               _mode
+              iteration
               );
 
 use vars qw( %FIELDS $AUTOLOAD $VERSION );
@@ -51,7 +52,7 @@ use constant IOZONE_HEADERS =>
 
 =head2 new()
 
-Creates a new Test::Parser::Iozone instance.
+Creates a new Test::Parser::iozone instance.
 Also calls the Test::Parser base class' new() routine.
 Takes no arguments.
 
@@ -59,14 +60,21 @@ Takes no arguments.
 
 sub new {
     my $class = shift;
-    my Test::Parser::Iozone $self = fields::new($class);
+    my Test::Parser::iozone $self = fields::new($class);
     $self->SUPER::new();
 
-    $self->name('iozone');
+    $self->testname('iozone');
     $self->type('stress');
+    $self->description('FIXME');
+    $self->summary('FIXME');
+    $self->license('FIXME');
+    $self->vendor('FIXME');
+    $self->release('FIXME');
+    $self->url('FIXME');
+    $self->platform('FIXME');
 
     #
-    # Iozone data in an array and other supporting information.
+    # iozone data in an array and other supporting information.
     #
     $self->{data} = [];
     $self->{info} = '';
@@ -74,6 +82,7 @@ sub new {
     $self->{version} = '';
     $self->{commandline} = '';
     $self->{_mode} = '';
+    $self->{iteration} = 0;
 
     #
     # Used for plotting.
@@ -95,7 +104,8 @@ sub data {
     if (@_) {
         $self->{data} = @_;
     }
-    return {iozone => {data => $self->{data}}};
+
+    return $self->{test};
 }
 
 =head3
@@ -122,7 +132,7 @@ sub parse_line {
         $self->{info} .= $line;
 
         if ($line =~ m/Version.*(\d+\.\d+)\b/) {
-            $self->{version} = $1;
+            $self->version($1);
         }
 
         if ($line =~ m/Command line used\:\s+(.*)$/) {
@@ -140,26 +150,37 @@ sub parse_line {
     # data
     elsif ($line =~ /^(\s*)\d+/) {
         $self->{_mode} = 'data';
+        
+        my @h = IOZONE_HEADERS;
+
+        while (@h) {
+            if ($self->{iteration} eq 0 ) {
+                $self->add_column(shift @h);
+            }
+            else {
+                shift @h;
+            }
+        }        
+        
+        $self->{iteration} = 1;
+        
         # Strip leading and trailing space
         $line =~ s/^\s+//;
         $line =~ s/\s+$//;
 
-        my %data;
-        my @d = split /\s+/, $line;
-        my @h = IOZONE_HEADERS;
-        while (@h) {
-            $data{ shift @h } = shift @d;
+        if ( $line =~ m/(\d*)\s*(\d*)\s*(\d*)\s*(\d*)\s*(\d*)\s*(\d*)\s*/ ) {
+#            warn ("$1 $2 $3 $4 $5 $6\n");
+        
+            $self->add_data($1, 1);
+            $self->add_data($2, 2);
+            $self->add_data($3, 3);
+            $self->add_data($4, 4);
+            $self->add_data($5, 5);
+            $self->add_data($6, 6);
+            
+            $self->inc_datum();
         }
-        if (@d) {
-            print "Error:  Leftover data elements while parsing a line of data\n";
-            return 1;
-        }
-
-        push @{$self->{'data'}}, \%data;
     }
-
-    # Otherwise we just ignore it.
-
     return 1;
 }
 
@@ -168,12 +189,20 @@ sub parse_line {
 Plot the data using Gnuplot.
 
 =cut
+
+
+=head3 commented_out
+
+FIXME: This will eventually be supported through the Test::Presenter method
+ to_plot().  When this method has been written, most of this can be thrown out
+
+
 sub plot_2d {
     my $self = shift;
 
     my %gopts;
     $gopts{'defaults'} = {
-        'title' => 'Iozone Performance',
+        'title' => 'iozone Performance',
 #        'yrange' => '[0:]',
         'x-axis label' => 'Record size (kb)',
         'y-axis label' => 'File size (kb)',
@@ -223,6 +252,7 @@ sub plot_2d {
         }
     }
 }
+=cut
 
 sub plot_3d {
     # TODO
@@ -305,6 +335,12 @@ sub _runs_to_data {
     return %data;
 }
 
+
+=head3 commented_out
+
+FIXME: This will eventually be supported through the Test::Presenter method
+ to_plot().  When this method has been written, most of this can be thrown out
+
 # This is a static function for plotting multiple runs
 # with a date or software version as the X-Axis
 sub historical_plot {
@@ -318,7 +354,7 @@ sub historical_plot {
     # Graph options
     my %gopts_defaults = 
         (
-         'title' => 'Historical Iozone Performance',
+         'title' => 'Historical iozone Performance',
          'x-axis label' => 'Time',
          'y-axis label' => 'KB/sec',
          'yrange'       => '[0:]',
@@ -362,7 +398,7 @@ sub historical_plot {
         return undef;
     }
 
-    # Create a plot for each of the Iozone fields with data defined
+    # Create a plot for each of the iozone fields with data defined
     foreach my $h (IOZONE_HEADERS) {
         # Skip x-columns
         next if ($h =~ /^kb$/i
@@ -417,7 +453,7 @@ sub comparison_plot {
     # Graph options
     my %gopts = 
         (
-         'title'        => 'Iozone Performance Comparison',
+         'title'        => 'iozone Performance Comparison',
          'x-axis label' => 'Record size (kb)',
          'y-axis label' => 'File size (kb)',
          'output file'  => "$outdir/iozone-",
@@ -452,7 +488,7 @@ sub comparison_plot {
         }
     }        
 
-    # Create a plot for each of the Iozone fields with data defined
+    # Create a plot for each of the iozone fields with data defined
     foreach my $h (IOZONE_HEADERS) {
         # Set the global options
         %{$gopts{$h}} = %{$gopts{'defaults'}};
@@ -466,6 +502,9 @@ sub comparison_plot {
     }
 
 }
+
+=cut
+
 
 sub summary_report {
     my $runs = shift;

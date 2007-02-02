@@ -1,15 +1,17 @@
-package Test::Parser::LHCS;
+package Test::Parser::ffsb;
+
+my $i=0;
 
 =head1 NAME
 
-Test::Parser::LHCS - Perl module to parse output from runs of the 
-Linux Hotplug CPU Support (LHCS) testsuite.
+Test::Parser::ffsb - Perl module to parse output from runs of the 
+FFSB testsuite.
 
 =head1 SYNOPSIS
 
- use Test::Parser::LHCS;
+ use Test::Parser::ffsb;
 
- my $parser = new Test::Parser::LTP;
+ my $parser = new Test::Parser::ffsb;
  $parser->parse($text);
  printf("Num Executed:  %8d\n", $parser->num_executed());
  printf("Num Passed:    %8d\n", $parser->num_passed());
@@ -21,7 +23,7 @@ and from the L<Test::Parser> baseclass.
 
 =head1 DESCRIPTION
 
-This module provides a way to extract information out of LHCS test run
+This module provides a way to extract information out of FFSB test run
 output.
 
 =head1 FUNCTIONS
@@ -34,11 +36,12 @@ use strict;
 use warnings;
 use Test::Parser;
 
-@Test::Parser::LHCS::ISA = qw(Test::Parser);
+@Test::Parser::ffsb::ISA = qw(Test::Parser);
 use base 'Test::Parser';
 
 use fields qw(
               _state
+              _current_test
               );
 
 use vars qw( %FIELDS $AUTOLOAD $VERSION );
@@ -46,7 +49,7 @@ our $VERSION = '1.4';
 
 =head2 new()
 
-Creates a new Test::Parser::LHCS instance.
+Creates a new Test::Parser::ffsb instance.
 Also calls the Test::Parser base class' new() routine.
 Takes no arguments.
 
@@ -54,11 +57,14 @@ Takes no arguments.
 
 sub new {
     my $class = shift;
-    my Test::Parser::LHCS $self = fields::new($class);
+    my Test::Parser::ffsb $self = fields::new($class);
     $self->SUPER::new();
 
-    $self->name('LHCS');
+    $self->name('FFSB');
     $self->type('standards');
+
+    $self->{_state}        = undef;
+    $self->{_current_test} = undef;
 
     $self->{num_passed} = 0;
     $self->{num_failed} = 0;
@@ -70,34 +76,14 @@ sub new {
 =head3
 
 Override of Test::Parser's default parse_line() routine to make it able
-to parse LTP output.
-
-The LHCS format is simple, with each test case issuing a status line of
-the form "foobar.42 PASS: Blah blah".  A regular expression in this
-subroutine matches lines that look like that, increments the
-passed/failed/skipped count accordingly, puts the info in a hash and
-adds it to the testcases array.
+to parse FFSB output.
 
 =cut
 sub parse_line {
     my $self = shift;
     my $line = shift;
 
-    if ($line =~ /^([\w\.]+)\s+([A-Z]+):(.*)$/) {
-        my $test;
-        $test->{name} = $1;
-        $test->{result} = $2;
-
-        if ($test->{result} eq 'PASS') {
-            $self->{num_passed}++;
-        } elsif ($test->{result} eq 'FAIL') {
-            $self->{num_failed}++;
-        } else {
-            $self->{num_skipped}++;
-        }
-
-        push @{$self->{testcases}}, $test;
-    }
+    $self->{_state} ||= 'intro';
 
     return 1;
 }
@@ -111,7 +97,7 @@ Bryce Harrington <bryce@osdl.org>
 
 =head1 COPYRIGHT
 
-Copyright (C) 2006 Bryce Harrington.
+Copyright (C) 2005 Bryce Harrington.
 All Rights Reserved.
 
 This script is free software; you can redistribute it and/or modify it

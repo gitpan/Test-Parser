@@ -1,17 +1,17 @@
-package Test::Parser::LTP;
+package Test::Parser::ltp;
 
 my $i=0;
 
 =head1 NAME
 
-Test::Parser::LTP - Perl module to parse output from runs of the 
+Test::Parser::ltp - Perl module to parse output from runs of the 
 Linux Test Project (LTP) testsuite.
 
 =head1 SYNOPSIS
 
- use Test::Parser::LTP;
+ use Test::Parser::ltp;
 
- my $parser = new Test::Parser::LTP;
+ my $parser = new Test::Parser::ltp;
  $parser->parse($text);
  printf("Num Executed:  %8d\n", $parser->num_executed());
  printf("Num Passed:    %8d\n", $parser->num_passed());
@@ -36,7 +36,7 @@ use strict;
 use warnings;
 use Test::Parser;
 
-@Test::Parser::LTP::ISA = qw(Test::Parser);
+@Test::Parser::ltp::ISA = qw(Test::Parser);
 use base 'Test::Parser';
 
 use fields qw(
@@ -49,7 +49,7 @@ our $VERSION = '1.4';
 
 =head2 new()
 
-Creates a new Test::Parser::LTP instance.
+Creates a new Test::Parser::ltp instance.
 Also calls the Test::Parser base class' new() routine.
 Takes no arguments.
 
@@ -57,7 +57,7 @@ Takes no arguments.
 
 sub new {
     my $class = shift;
-    my Test::Parser::LTP $self = fields::new($class);
+    my Test::Parser::ltp $self = fields::new($class);
     $self->SUPER::new();
 
     $self->name('LTP');

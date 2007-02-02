@@ -8,21 +8,9 @@ Test::Parser::SysbenchCPU - Perl module to parse output from Sysbench --test=cpu
 
     use Test::Parser::SysbenchCPU;
     my $parser = new Test::Parser::SysbenchCPU;
-    $parser->parse($text)
-
-    printf("     Threads:  %15s\n", $parser->summary('threads'));
-    printf("   Max Prime:  %15s\n", $parser->summary('maxprime'));
-    printf("  Total Time:  %15s\n", $parser->totals('time'));
-    printf("Total Events:  %15s\n", $parser->totals('events'));
-    printf("  Total Exec:  %15s\n", $parser->totals('exec'));
-    printf("      PR Min:  %15s\n", $parser->per_request('min'));
-    printf("      PR Avg:  %15s\n", $parser->per_request('avg'));
-    printf("      PR Max:  %15s\n", $parser->per_request('max'));
-    printf("95th Percent:  %15s\n", $parser->per_request('95'));
-    printf("   Event Avg:  %15s\n", $parser->eventfair('avg'));
-    printf("Event StdDev:  %15s\n", $parser->eventfair('stddev'));
-    printf("    Exec Avg:  %15s\n", $parser->execfair('avg'));
-    printf(" Exec StdDev:  %15s\n", $parser->execfair('stddev'));
+    $parser->parse($text);
+    
+    $parser->to_xml();
 
 Additional information is available from the subroutines listed below
 and from the L<Test::Parser> baseclass.
@@ -70,12 +58,11 @@ sub new {
     $self->testname('sysbench');
     $self->description('A variety of tests');
     $self->summary('Lots of things');
-    $self->license('');
-    $self->vendor('');
-    $self->release('');
-    $self->url('');
-    $self->platform('');
-#    $self->type('unit');
+    $self->license('FIXME');
+    $self->vendor('FIXME');
+    $self->release('FIXME');
+    $self->url('FIXME');
+    $self->platform('FIXME');
 
     $self->{data} = ();
 
@@ -110,175 +97,132 @@ sub parse_line {
     my $self = shift;
     my $line = shift;
 
-    my $label1 = '';
-    my $temp1 = '';
-
-    my $label2 = '';
-    my $temp2 = '';
+    my @labels = ();
+    my @keys = ();
+    my $size = 0;
 
     # Trim any leading and trailing whitespaces.
     $line =~ s/(^\s+|\s+$)//g;
 
     # Determine what info we have in the line...
     if ($line =~ /^Number .*?threads:(.+)/) {
-        $temp1 = $1;
-        $label1 = 'sum_threads';
+        $keys[1] = $1;
+        $labels[1] = 'sum_threads';
+        $size = 1;
     }
 
     elsif ($line =~ /^sysbench v(.+):/) {
+        $self->testname('sysbench');
         $self->version($1);
     }
 
     elsif ($line =~ /^Maximum .*?test:(.+)/) {
-        $temp1 = $1;
-        $label1 = 'sum_maxprime';
+        $keys[1] = $1;
+        $labels[1] = 'sum_maxprime';
+        $size = 1;
     }
 
-    elsif ($line =~ /^total .*?ime:(.+)/) {
-        $temp1 = $1;
-        $label1 = 'total_time';
+    elsif ($line =~ /^total .*?time:\s+([\.\d]+)(\w+)/) {
+        $keys[1] = $1;
+        $labels[1] = 'total_time';
+        $keys[2] = $2;
+        $labels[2] = 'total_time_units';
+        $size = 2;
     }
 
-    elsif ($line =~ /^total .*?events:(.+)/) {
-        $temp1 = $1;
-        $label1 = 'total_events';
+    elsif ($line =~ /^total .*?events:\s+(.+)/) {
+        $keys[1] = $1;
+        $labels[1] = 'total_events';
+        $size = 1;
     }
 
-    elsif ($line =~ /^total .*?execution:(.+)/) {
-        $temp1 = $1;
-        $label1 = 'total_exec';
+    elsif ($line =~ /^total .*?execution:\s+(.+)/) {
+        $keys[1] = $1;
+        $labels[1] = 'total_exec';
+        $size = 1;
     }
 
-    elsif ($line =~ /^min:(.+)/) {
-        $temp1 = $1;
-        $label1 = 'pr_min';
+    elsif ($line =~ /^min:\s+([\.\d]+)(\w+)/) {
+        $keys[1] = $1;
+        $labels[1] = 'pr_min';
+        $keys[2] = $2;
+        $labels[2] = 'pr_min_units';
+        $size = 2;
     }
 
-    elsif ($line =~ /^avg:(.+)/) {
-        $temp1 = $1;
-        $label1 = 'pr_avg';
+    elsif ($line =~ /^avg:\s+([\.\d]+)(\w+)/) {
+        $keys[1] = $1;
+        $labels[1] = 'pr_avg';
+        $keys[2] = $2;
+        $labels[2] = 'pr_avg_units';
+        $size = 2;
     }
 
-    elsif ($line =~ /^max:(.+)/) {
-        $temp1 = $1;
-        $label1 = 'pr_max';
+    elsif ($line =~ /^max:\s+([\.\d]+)(\w+)/) {
+        $keys[1] = $1;
+        $labels[1] = 'pr_max';
+        $keys[2] = $2;
+        $labels[2] = 'pr_max_units';
+        $size = 2;
     }
 
-    elsif ($line =~ /^approx. .*?tile:(.+)/) {
-        $temp1 = $1;
-        $label1 = 'pr_95';
+    elsif ($line =~ /^approx. .*?tile:\s+([\.\d]+)(\w+)/) {
+        $keys[1] = $1;
+        $labels[1] = 'pr_95';
+        $keys[2] = $2;
+        $labels[2] = 'pr_95_units';
+        $size = 2;
     }
 
     # These are done together as there are 2 pieces of information on each line
     elsif ($line =~ /^events .*?:(.+)\/(.+)/) {
-        $temp1 = $1;
-        $temp2 = $2;
-        $label1 = 'event_avg';
-        $label2 = 'event_stddev';
+        $keys[1] = $1;
+        $labels[1] = 'event_avg';
+        $keys[2] = $2;
+        $labels[2] = 'event_stddev';
+        $size = 2;
     }
 
     # These are done together as there are 2 pieces of information on each line
     elsif ($line =~ /^execution .*?:(.+)\/(.+)/) {
-        $temp1 = $1;
-        $temp2 = $2;
-        $label1 = 'exec_avg';
-        $label2 = 'exec_stddev';
+        $keys[1] = $1;
+        $labels[1] = 'exec_avg';
+        $keys[2] = $2;
+        $labels[2] = 'exec_stddev';
+        $size = 2;
     }
 
-    # Kill any leading or trailing spaces for neatness
-
-   
-    if($temp1 ne '') {
-        $temp1 =~ s/(^\s+|\s+$)//g;    
-        my $col = $self->add_column($label1);
-        $self->add_data($temp1, $col);
-#        if( !defined($self->{$label1}) ) {
-#            $self->{$label1} = {};
-#        }
-#        $self->{$label1} = $temp1;
+    my $do_units = 0;
+    
+    for (my $tekey = 0; $tekey <= $size; $tekey++)
+    {
+        if( $tekey+1 <= $size ) {
+            my $check_me = $labels[$tekey+1];
+            my $orig = $labels[$tekey];
+            my $units = $orig;
+            $units .= "_units";
+            if( $check_me eq $units ) {
+                $do_units = 1;
+            }
+        }
+        if ( defined($labels[$tekey]) ) {
+            $keys[$tekey] =~ s/(^\s+|\s+$)//g;
+            my $col = 0;
+            if ($do_units == 1) {
+                $keys[$tekey+1] =~ s/(^\s+|\s+$)//g;
+                $col = $self->add_column( $labels[$tekey], $keys[$tekey+1] );
+                $self->add_data( $keys[$tekey], $col );
+                
+                $tekey++;
+            }
+            else {
+                $col = $self->add_column( $labels[$tekey] );
+                $self->add_data( $keys[$tekey], $col );
+            }
+            $do_units=0;
+        }
     }
-
-    if($temp2 ne '') {
-        $temp2 =~ s/(^\s+|\s+$)//g;
-        my $col = $self->add_column($label2);
-        $self->add_data($temp2, $col);
-#        if( !defined($self->{$label2}) ) {
-#            $self->{$label2} = {};
-#        }
-#        $self->{$label2} = $temp2;
-    }
-
     return 1;
-}
-
-
-=head2 summary()
-
-	Purpose: Return Summary information for the Sysbench test
-	Input: 'threads' or 'maxprime'
-	Output: The number of threads OR the prime number calculated OR undef
-
-=cut
-sub get_summary {
-    my $self = shift;
-    my $input = shift || return undef;
-    return $self->{"sum_$input"};
-}
-
-
-=head2 totals()
-
-	Purpose: Return Totals information for the Sysbench test
-	Input: 'time' or 'events' or 'exec'
-	Output: The total time of execution OR the total number of events OR the total time taken by execution of all events OR undef
-
-=cut
-sub totals {
-    my $self = shift;
-    my $input = shift || return undef;
-    return $self->{"total_$input"};
-}
-
-
-=head2 per_request()
-
-	Purpose: Return Per-Request information for the Sysbench test
-	Input: 'min' or 'avg' or 'max' or 95'
-	Output: The minimum OR average OR maximum amount of time per request OR the 9th percentile of time per request OR undef
-
-=cut
-sub per_request {
-    my $self = shift;
-    my $input = shift || return undef;
-    return $self->{"pr_$input"};
-}
-
-
-=head2 eventfair()
-
-	Purpose: Return the Thread Fairness information for the Sysbench test
-	Input: 'avg' OR 'stddev'
-	Output: The average OR standard deviation of thread event fairness OR undef
-
-=cut
-sub eventfair {
-    my $self = shift;
-    my $input = shift || return undef;
-    return $self->{"event_$input"};
-}
-
-
-=head2 execfair()
-
-	Purpose: Return the Thread Fairness information for the Sysbench test
-	Input: 'avg' OR 'stddev'
-	Output: The average OR standard deviation of thread execution fairness OR undef
-
-=cut
-sub execfair {
-    my $self = shift;
-    my $input = shift || return undef;
-    return $self->{"exec_$input"};
 }
 
 1;
@@ -286,7 +230,7 @@ __END__
 
 =head1 AUTHOR
 
-John Daiker <jdaiker@osdl.org>
+John Daiker <daikerjohn@gmail.com>
 
 =head1 COPYRIGHT
 

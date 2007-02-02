@@ -57,6 +57,7 @@ GetOptions(
            "3d-plot",
            "hist-plot",
            "comp-plot|c",
+           "comp-names|n=s@"   => \@opt_comp_names,,
            "file-sizes|f=i@"   => \@opt_file_sizes,
            "record-sizes|r=i@" => \@opt_record_sizes,
            "no-summary|N",
@@ -186,6 +187,9 @@ sub main {
     if ($opt_comp_plot) {
         if (@parsers < 2) {
             warn "Error:  --comparison report requires at least 2 valid runs\n";
+        } elsif (@parsers != @opt_comp_names) {
+            warn "Error:  Names must be specified for each run.\n";
+            warn "        Use --comp-names=name1,name2,...\n"
         } else {
             Test::Parser::Iozone::comparison_plot(\@parsers, \@opt_comp_names, 
                                                   \@opt_file_sizes, \@opt_record_sizes);

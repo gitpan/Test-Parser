@@ -64,6 +64,7 @@ use fields qw(
               summary
               description
               platform
+              kernel
               version
               testname
               type
@@ -123,6 +124,7 @@ sub new {
     $self->{summary}       = 0;
     $self->{description}   = 0;
     $self->{platform}      = 0;
+    $self->{kernel}        = 0;
     $self->{'coverage-report'}=0;
     $self->{'code-convention-report'}=0;   
  
@@ -196,7 +198,7 @@ sub to_xml {
     my $xml = "";
     my $data = $self->data();
     my @required = qw(testname version description summary license vendor release url platform);
-    my @fields   = qw(testname version description summary license vendor release url platform root build coverage-report code-convention-report);
+    my @fields   = qw(testname version description summary license vendor release url platform kernel root build coverage-report code-convention-report);
 
     foreach my $field (@required) {
         if( !$self->{$field} ) {
@@ -236,7 +238,7 @@ sub to_xml {
                 $xml .= qq|   <columns>\n|;
 
                 my %column_hash=%{$self->{test}->{data}->{columns}};
-                foreach my $column_key(sort keys %column_hash){
+                foreach my $column_key(sort {$a <=> $b} keys %column_hash){
                     if( $column_hash{$column_key}->{'name'} ){       
                         $xml .= qq|    <c id="$column_key" name="$column_hash{$column_key}->{'name'}"|;
                     }
@@ -249,9 +251,9 @@ sub to_xml {
             }
             if( $self->{test}->{data}->{datum} ){
                 my %datum_hash=%{ $self->{test}->{data}->{datum} };                 
-                foreach my $datum_key( sort keys %datum_hash ){
+                foreach my $datum_key( sort {$a <=> $b} keys %datum_hash ){
                     $xml .= qq|   <datum id="$datum_key">\n|;
-                    foreach my $key_val( sort keys %{ $datum_hash{$datum_key} }){
+                    foreach my $key_val( sort {$a <=> $b} keys %{ $datum_hash{$datum_key} }){
                         if( $key_val ){
                             $xml .= qq|    <d id="$key_val">|;
                             if( $self->{test}->{data}->{datum}->{$datum_key}->{$key_val} ){
@@ -324,7 +326,7 @@ sub inc_datum {
     else {
         $self->{'num-datum'} = 1;
     }
-    return $self->{'num_datum'};
+    return $self->{'num-datum'};
 }
 
 
@@ -337,7 +339,7 @@ sub to_dump {
     my $self = shift;
 
     require Data::Dumper;
-    print Data::Dumper->Dumper($self->{"data"});
+    print Data::Dumper->Dumper($self->{test});
 }
 
 
@@ -537,6 +539,38 @@ sub outdir {
         $self->{outdir} = shift;
     }
     return $self->{outdir};
+}
+
+
+=head2 get_key
+
+    Purpose: To find individual key values parsed from test results
+    Input: The search key, the 'datum' the key is stored in
+    Output: Data stored under the search key, or the search key if not found
+
+=cut
+sub get_key {
+    my $self = shift;
+    my $key = shift or warn ("No search key specified");
+    my $datum_id = shift or warn ("No datum id specified");
+
+    my $col_id = undef;
+    
+    foreach my $id ( keys %{ $self->{test}->{data}->{columns} } ) {
+        my $check_key = $self->{test}->{data}->{columns}->{$id}->{name};
+        
+        if( $self->{test}->{data}->{columns}->{$id}->{name} eq $key ) {
+            $col_id = $id;
+        }
+    }
+    
+    if (defined($col_id)) {
+        return $self->{test}->{data}->{datum}->{$datum_id}->{$col_id}
+    }
+    else {
+        warn ("Unable to find key: " . $key . "\n");
+        return $key;
+    }
 }
 
 

@@ -2,7 +2,7 @@ use strict;
 my @scripts;
 
 BEGIN {
-@scripts = `find scripts/ -type 'f' | egrep -v '/.#|CVS|~\$' `;
+@scripts = `find scripts/ -type 'f' | egrep -v '/.#|svn|~\$' `;
 }
 
 

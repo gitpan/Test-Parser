@@ -26,7 +26,6 @@ use strict;
 use warnings;
 use Test::Parser;
 use XML::Simple;
-use Chart::Graph::Gnuplot qw(gnuplot);
 
 @Test::Parser::Sysctl::ISA = qw(Test::Parser);
 use base 'Test::Parser';

@@ -15,12 +15,12 @@ my $parser = new Test::Parser::Iozone;
 $parser->parse($logfile);
 
 my $h = $parser->data();
-my @a = @{$h->{iozone}->{data}};
+my %a = %{$h->{data}->{datum}};
 
 my $realized;
 my $expected;
 
-$realized = scalar @a;
+$realized = keys( %a );
 $expected = 135;
 ok ($realized == $expected)
    or diag("Data count: expected $expected, realized $realized");

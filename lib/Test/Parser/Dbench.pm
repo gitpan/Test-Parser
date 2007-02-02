@@ -64,7 +64,7 @@ sub new {
     $self->{license}=qq|GPL2|;
     $self->{vendor}= qq|   Copyright (C) by Andrew Tridgell 1999, 2001
    Copyright (C) 2001 by Martin Pool|;
-    $self->{description}= qq| dbench is a filesystem benchmark that generates load patterns similar to those of the commercial Netbench benchmark, but wi  thout requiring a lab of Windows load generators to run. It is now considered a de-facto standard for generating load on th  e Linux VFS.|;
+    $self->{description}= qq| dbench is a filesystem benchmark that generates load patterns similar to those of the commercial Netbench benchmark, but without requiring a lab of Windows load generators to run. It is now considered a de-facto standard for generating load on the Linux VFS.|;
     $self->{url}=qq|tridge\@samba.org|;
     $self->platform('FIXME');
 
@@ -100,67 +100,21 @@ sub parse_line {
     my $self = shift;
     my $line = shift;
     if( $line=~m/Throughput\s+(\d+\.\d+)\s(\D+\/\D+)\s(\d+) (\w{5})/){
-    
-        $name="Throughput";
-        $units=$2;
-        my $temp = $self->add_column($name,$units);
-        $self->add_data($1, $temp);
-        
-        $name="Processes";
-        $units=$4;
-        $temp = $self->add_column($name,$units);
-        $self->add_data($3, $temp);
+        if ( ! defined $self->{'num-datum'} ){
+            $self->add_column("Throughput",$2);
+            $self->add_column("Processes",$4);
+            $self->{'num-datum'} = 1;
+        } else {
+            $self->{'num-datum'} += 1;
+        }
+        $self->add_data($1, '1');
+        $self->add_data($3, '2');
     }
-    if( $line =~ m/\D+\sversion\s+(\d+\.\d+)\s-\s(.+)/){
+    if( $line =~ m/.*version\s+(\d+\.\d+)\s-\s(.+)/){
         $self->{version}=$1;
         $self->{release}=$1;
         $self->{vendor}=$2;
     }
-}
-
-=head3 to_xml()
-
-Returns Dbench data transformed into XML format.
-
-=cut
-
-sub to_xml_f {
-    my $self = shift;
-    my $xml = "";
-
-    $xml .= qq|<component name=$self->{testname} version=$self->{data}->{version}>
-     <description>
-      Performance Test of $self->{testname} \$Revision: 5.2.27 \$Build: linux
-     </description>
-     <summary>Performance Test of $self->{testname}</summary>
-     <license>GPL</license>
-     <vendor>The Product</vendor>
-     <release>5.2.27</release>
-     <url>http://mycompanyurl/</url>
-     <root>http://mycompanyurl/build-testresults/2005/04/03</root>
-     <platform>ubuntu-1-i386</platform>
-     <build status="pass">
-      <log-file name="build1.log" path="logs/build"/>
-     </build>
-     <test log-filename="out.txt" path="/joshua/home/" suite-type="demo">
-      <data>
-       <columns>
-        <c id="1" name="Throughput" units="KBytes/sec"/>
-        <c id="2" name="Procs"/>
-       </columns>
-       <datum id="101">
-        <d id="1">$self->{data}->{throughput}</d>
-        <d id="2">$self->{data}->{procs}</d>
-       </datum>
-      </data>
-      <result executed="1" passed="1" failed="0" skipped="0"/>
-      <expected-result executed="1" passed="1" failed="0" skipped="0"/>
-     </test>
-     <coverage-report percentage="-1" path="logs/test/coverage/report/index.html"/>
-     <code-convention-report path="test/checkstyle/report/index.html"/>
-    </component>
-|;
-    return $xml;
 }
 
 1;

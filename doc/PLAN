@@ -13,8 +13,11 @@ Milestone 1
 
 Milestone 2
 -----------
-* Write output format to TRPI
+* (DONE) Write output format to TRPI
+* test_parser:  Need to make --testname less case sensitive
+* test_parser:  Check if to_$format() exists before calling it
+* test_parser:  Check if data file exists
 * Write parser for cthon
 * Integrate use of the PyNFS parser into web_test_reporter
-
+* Release new version of Test::Parser
 

@@ -1,19 +1,19 @@
-package Test::Parser::Dbt2;
+package Test::Parser::Dbt5;
 
 =head1 NAME
 
-Test::Parser::Dbt2 - Perl module to parse output files from a DBT-2 test run.
+Test::Parser::Dbt5 - Perl module to parse output files from a DBT-5 test run.
 
 =head1 SYNOPSIS
 
- use Test::Parser::Dbt2;
+ use Test::Parser::Dbt5;
 
- my $parser = new Test::Parser::Dbt2;
+ my $parser = new Test::Parser::Dbt5;
  $parser->parse($text);
 
 =head1 DESCRIPTION
 
-This module transforms DBT-2 output into a hash that can be used to generate
+This module transforms DBT-5 output into a hash that can be used to generate
 XML.
 
 =head1 FUNCTIONS
@@ -35,7 +35,7 @@ use Test::Parser::Sysctl;
 use Test::Parser::Vmstat;
 use XML::Simple;
 
-@Test::Parser::Dbt2::ISA = qw(Test::Parser);
+@Test::Parser::Dbt5::ISA = qw(Test::Parser);
 use base 'Test::Parser';
 
 use fields qw(
@@ -48,7 +48,7 @@ our $VERSION = '1.4';
 
 =head2 new()
 
-Creates a new Test::Parser::Dbt2 instance.
+Creates a new Test::Parser::Dbt5 instance.
 Also calls the Test::Parser base class' new() routine.
 Takes no arguments.
 
@@ -56,10 +56,10 @@ Takes no arguments.
 
 sub new {
     my $class = shift;
-    my Test::Parser::Dbt2 $self = fields::new($class);
+    my Test::Parser::Dbt5 $self = fields::new($class);
     $self->SUPER::new();
 
-    $self->name('dbt2');
+    $self->name('dbt5');
     $self->type('standards');
 
     $self->{data} = {};
@@ -70,7 +70,7 @@ sub new {
 
 =head3 data()
 
-Returns a hash representation of the dbt2 data.
+Returns a hash representation of the dbt5 data.
 
 =cut
 sub data {
@@ -78,7 +78,7 @@ sub data {
     if (@_) {
         $self->{data} = @_;
     }
-    return {dbt2 => $self->{data}};
+    return {dbt5 => $self->{data}};
 }
 
 sub duration {
@@ -99,7 +99,7 @@ sub metric {
 =head3
 
 Override of Test::Parser's default parse() routine to make it able
-to parse dbt2 output.  Support only reading from a file until a better
+to parse dbt5 output.  Support only reading from a file until a better
 parsing algorithm comes along.
 
 =cut
@@ -113,7 +113,7 @@ sub parse {
     return undef unless (-d $input);
     my $filename;
     #
-    # Put everything into a report directory under the specified DBT-2 output
+    # Put everything into a report directory under the specified DBT-5 output
     # directory.
     #
     $self->{outdir} = $input;
@@ -214,7 +214,10 @@ sub parse_db {
         my $db;
         if ($line =~ /PostgreSQL/) {
             $db = new Test::Parser::PgOptions;
-        }
+        } else {
+            print "unknown database type: $line\n";
+            exit 1;
+	}
         $db->parse($filename);
         my $d = $db->data();
         for my $k (keys %$d) {
@@ -226,7 +229,6 @@ sub parse_db {
 sub parse_mix {
     my $self = shift;
     my $filename = shift;
-
     my $current_time;
     my $previous_time;
     my $elapsed_time = 1;
@@ -236,27 +238,45 @@ sub parse_mix {
     my %rollback_count;
     my %transaction_response_time;
 
-    my @delivery_response_time = ();
-    my @new_order_response_time = ();
-    my @order_status_response_time = ();
-    my @payement_response_time = ();
-    my @stock_level_response_time = ();
+    my @trade_order_response_time = ();
+    my @trade_result_response_time = ();
+    my @trade_lookup_response_time = ();
+    my @trade_update_response_time = ();
+    my @trade_status_response_time = ();
+    my @customer_position_response_time = ();
+    my @broker_volume_response_time = ();
+    my @security_detail_response_time = ();
+    my @market_feed_response_time = ();
+    my @market_watch_response_time = ();
+    my @data_maintenance_response_time = ();
     #
     # Zero out the data.
     #
-    $rollback_count{ 'd' } = 0;
-    $rollback_count{ 'n' } = 0;
-    $rollback_count{ 'o' } = 0;
-    $rollback_count{ 'p' } = 0;
-    $rollback_count{ 's' } = 0;
+    $rollback_count{ '0' } = 0;
+    $rollback_count{ '1' } = 0;
+    $rollback_count{ '2' } = 0;
+    $rollback_count{ '3' } = 0;
+    $rollback_count{ '4' } = 0;
+    $rollback_count{ '5' } = 0;
+    $rollback_count{ '6' } = 0;
+    $rollback_count{ '7' } = 0;
+    $rollback_count{ '8' } = 0;
+    $rollback_count{ '9' } = 0;
+    $rollback_count{ '10' } = 0;
     #
     # Transaction counts for the steady state portion of the test.
     #
-    $transaction_count{ 'd' } = 0;
-    $transaction_count{ 'n' } = 0;
-    $transaction_count{ 'o' } = 0;
-    $transaction_count{ 'p' } = 0;
-    $transaction_count{ 's' } = 0;
+    $transaction_count{ '0' } = 0;
+    $transaction_count{ '1' } = 0;
+    $transaction_count{ '2' } = 0;
+    $transaction_count{ '3' } = 0;
+    $transaction_count{ '4' } = 0;
+    $transaction_count{ '5' } = 0;
+    $transaction_count{ '6' } = 0;
+    $transaction_count{ '7' } = 0;
+    $transaction_count{ '8' } = 0;
+    $transaction_count{ '9' } = 0;
+    $transaction_count{ '10' } = 0;
 
     $self->{data}->{errors} = 0;
     $self->{data}->{steady_state_start_time} = undef;
@@ -288,36 +308,72 @@ sub parse_mix {
             # during the steady state phase.
             #
             if ($self->{data}->{steady_state_start_time}) {
-                if ($transaction eq 'd') {
+                if ($transaction eq '0') {
                     ++$transaction_count{$transaction};
                     $transaction_response_time{$transaction} += $response_time;
-                    push @delivery_response_time, $response_time;
-                } elsif ($transaction eq 'n') {
+                    push @trade_order_response_time, $response_time;
+                } elsif ($transaction eq '1') {
                     ++$transaction_count{$transaction};
                     $transaction_response_time{$transaction} += $response_time;
-                    push @new_order_response_time, $response_time;
-                } elsif ($transaction eq 'o') {
+                    push @trade_result_response_time, $response_time;
+                } elsif ($transaction eq '2') {
                     ++$transaction_count{$transaction};
                     $transaction_response_time{$transaction} += $response_time;
-                    push @order_status_response_time, $response_time;
-                } elsif ($transaction eq 'p') {
+                    push @trade_lookup_response_time, $response_time;
+                } elsif ($transaction eq '3') {
                     ++$transaction_count{$transaction};
                     $transaction_response_time{$transaction} += $response_time;
-                    push @payement_response_time, $response_time;
-                } elsif ($transaction eq 's') {
+                    push @trade_update_response_time, $response_time;
+                } elsif ($transaction eq '4') {
                     ++$transaction_count{$transaction};
                     $transaction_response_time{$transaction} += $response_time;
-                    push @stock_level_response_time, $response_time;
-                } elsif ($transaction eq 'D') {
-                    ++$rollback_count{'d'};
-                } elsif ($transaction eq 'N') {
-                    ++$rollback_count{'n'};
-                } elsif ($transaction eq 'O') {
-                    ++$rollback_count{'o'};
-                } elsif ($transaction eq 'P') {
-                    ++$rollback_count{'p'};
-                } elsif ($transaction eq 'S') {
-                    ++$rollback_count{'s'};
+                    push @trade_status_response_time, $response_time;
+                } elsif ($transaction eq '5') {
+                    ++$transaction_count{$transaction};
+                    $transaction_response_time{$transaction} += $response_time;
+                    push @customer_position_response_time, $response_time;
+                } elsif ($transaction eq '6') {
+                    ++$transaction_count{$transaction};
+                    $transaction_response_time{$transaction} += $response_time;
+                    push @broker_volume_response_time, $response_time;
+                } elsif ($transaction eq '7') {
+                    ++$transaction_count{$transaction};
+                    $transaction_response_time{$transaction} += $response_time;
+                    push @security_detail_response_time, $response_time;
+                } elsif ($transaction eq '8') {
+                    ++$transaction_count{$transaction};
+                    $transaction_response_time{$transaction} += $response_time;
+                    push @market_feed_response_time, $response_time;
+                } elsif ($transaction eq '9') {
+                    ++$transaction_count{$transaction};
+                    $transaction_response_time{$transaction} += $response_time;
+                    push @market_watch_response_time, $response_time;
+                } elsif ($transaction eq '10') {
+                    ++$transaction_count{$transaction};
+                    $transaction_response_time{$transaction} += $response_time;
+                    push @data_maintenance_response_time, $response_time;
+                } elsif ($transaction eq '0R') {
+                    ++$rollback_count{'0'};
+                } elsif ($transaction eq '1R') {
+                    ++$rollback_count{'1'};
+                } elsif ($transaction eq '2R') {
+                    ++$rollback_count{'2'};
+                } elsif ($transaction eq '3R') {
+                    ++$rollback_count{'3'};
+                } elsif ($transaction eq '4R') {
+                    ++$rollback_count{'4'};
+                } elsif ($transaction eq '5R') {
+                    ++$rollback_count{'5'};
+                } elsif ($transaction eq '6R') {
+                    ++$rollback_count{'6'};
+                } elsif ($transaction eq '7R') {
+                    ++$rollback_count{'7'};
+                } elsif ($transaction eq '8R') {
+                    ++$rollback_count{'8'};
+                } elsif ($transaction eq '9R') {
+                    ++$rollback_count{'9'};
+                } elsif ($transaction eq '10R') {
+                    ++$rollback_count{'10'};
                 } elsif ($transaction eq 'E') {
                     ++$self->{data}->{errors};
                     ++$error_count{$transaction};
@@ -340,7 +396,7 @@ sub parse_mix {
     #
     # Calculated the number of New Order transactions per second.
     #
-    my $tps = $transaction_count{'n'} /
+    my $tps = $transaction_count{'1'} /
             ($current_time - $self->{data}->{steady_state_start_time});
     $self->{data}->{metric} = $tps * 60.0;
     $self->{data}->{duration} =
@@ -351,50 +407,88 @@ sub parse_mix {
     # Other transaction statistics.
     #
     my %transaction;
-    $transaction{'d'} = "Delivery";
-    $transaction{'n'} = "New Order";
-    $transaction{'o'} = "Order Status";
-    $transaction{'p'} = "Payment";
-    $transaction{'s'} = "Stock Level";
+    $transaction{'0'} = "Trade Order";
+    $transaction{'1'} = "Trade Result";
+    $transaction{'2'} = "Trade Lookup";
+    $transaction{'3'} = "Trade Update";
+    $transaction{'4'} = "Trade Status";
+    $transaction{'5'} = "Customer Position";
+    $transaction{'6'} = "Broker Volume";
+    $transaction{'7'} = "Security Detail";
+    $transaction{'8'} = "Market Feed";
+    $transaction{'9'} = "Market Watch";
+    $transaction{'10'} = "Data Maintenance";
     #
     # Resort numerically, default is by ascii..
     #
-    @delivery_response_time = sort { $a <=> $b } @delivery_response_time;
-    @new_order_response_time = sort{ $a <=> $b }  @new_order_response_time;
-    @order_status_response_time =
-        sort { $a <=> $b } @order_status_response_time;
-    @payement_response_time = sort { $a <=> $b } @payement_response_time;
-    @stock_level_response_time = sort { $a <=> $b } @stock_level_response_time;
+    @trade_order_response_time = sort { $a <=> $b } @trade_order_response_time;
+    @trade_result_response_time =
+            sort { $a <=> $b } @trade_result_response_time;
+    @trade_lookup_response_time =
+            sort { $a <=> $b } @trade_lookup_response_time;
+    @trade_update_response_time =
+            sort { $a <=> $b } @trade_update_response_time;
+    @trade_status_response_time =
+            sort { $a <=> $b } @trade_status_response_time;
+    @customer_position_response_time =
+            sort { $a <=> $b } @customer_position_response_time;
+    @broker_volume_response_time =
+            sort { $a <=> $b } @broker_volume_response_time;
+    @security_detail_response_time =
+            sort { $a <=> $b } @security_detail_response_time;
+    @market_feed_response_time = sort { $a <=> $b } @market_feed_response_time;
+    @market_watch_response_time =
+            sort { $a <=> $b } @market_watch_response_time;
+    @data_maintenance_response_time =
+            sort { $a <=> $b } @data_maintenance_response_time;
     #
     # Get the index for the 90th percentile response time index for each
     # transaction.
     #
-    my $delivery90index = $transaction_count{'d'} * 0.90;
-    my $new_order90index = $transaction_count{'n'} * 0.90;
-    my $order_status90index = $transaction_count{'o'} * 0.90;
-    my $payment90index = $transaction_count{'p'} * 0.90;
-    my $stock_level90index = $transaction_count{'s'} * 0.90;
+    my $trade_order90index = $transaction_count{'0'} * 0.90;
+    my $trade_result90index = $transaction_count{'1'} * 0.90;
+    my $trade_lookup90index = $transaction_count{'2'} * 0.90;
+    my $trade_update90index = $transaction_count{'3'} * 0.90;
+    my $trade_status90index = $transaction_count{'4'} * 0.90;
+    my $customer_position90index = $transaction_count{'5'} * 0.90;
+    my $broker_volume90index = $transaction_count{'6'} * 0.90;
+    my $security_detail90index = $transaction_count{'7'} * 0.90;
+    my $market_feed90index = $transaction_count{'8'} * 0.90;
+    my $market_watch90index = $transaction_count{'9'} * 0.90;
+    my $data_maintenance90index = $transaction_count{'10'} * 0.90;
 
     my %response90th;
 
     #
-    # 90th percentile for Delivery transactions.
+    # 90th percentile calculations.
     #
-    $response90th{'d'} = $self->get_90th_per($delivery90index,
-            @delivery_response_time);
-    $response90th{'n'} = $self->get_90th_per($new_order90index,
-            @new_order_response_time);
-    $response90th{'o'} = $self->get_90th_per($order_status90index,
-            @order_status_response_time);
-    $response90th{'p'} = $self->get_90th_per($payment90index,
-            @payement_response_time);
-    $response90th{'s'} = $self->get_90th_per($stock_level90index,
-            @stock_level_response_time);
+    $response90th{'0'} = $self->get_90th_per($trade_order90index,
+            @trade_order_response_time);
+    $response90th{'1'} = $self->get_90th_per($trade_result90index,
+            @trade_result_response_time);
+    $response90th{'2'} = $self->get_90th_per($trade_lookup90index,
+            @trade_lookup_response_time);
+    $response90th{'3'} = $self->get_90th_per($trade_update90index,
+            @trade_update_response_time);
+    $response90th{'4'} = $self->get_90th_per($trade_status90index,
+            @trade_status_response_time);
+    $response90th{'5'} = $self->get_90th_per($customer_position90index,
+            @customer_position_response_time);
+    $response90th{'6'} = $self->get_90th_per($broker_volume90index,
+            @broker_volume_response_time);
+    $response90th{'7'} = $self->get_90th_per($security_detail90index,
+            @security_detail_response_time);
+    $response90th{'8'} = $self->get_90th_per($market_feed90index,
+            @market_feed_response_time);
+    $response90th{'9'} = $self->get_90th_per($market_watch90index,
+            @market_watch_response_time);
+    $response90th{'10'} = $self->get_90th_per($data_maintenance90index,
+            @data_maintenance_response_time);
     #
     # Summarize the transaction statistics into the hash structure for XML.
     #
     $self->{data}->{transactions}->{transaction} = [];
-    foreach my $idx ('d', 'n', 'o', 'p', 's') {
+    foreach my $idx ('0', '1', '2', '3', '4','5','6','7','8','9','10') {
         my $mix = ($transaction_count{$idx} + $rollback_count{$idx}) /
                 $total_transaction_count * 100.0;
         my $rt_avg = 0;
@@ -403,7 +497,12 @@ sub parse_mix {
                     $transaction_count{$idx};
         }
         my $txn_total = $transaction_count{$idx} + $rollback_count{$idx};
-        my $rollback_per = $rollback_count{$idx} / $txn_total * 100.0;
+        my $rollback_per;
+        if ($txn_total ne 0) {
+            $rollback_per = $rollback_count{$idx} / $txn_total * 100.0;
+        } else {
+            $rollback_per = 0;
+        }
         push @{$self->{data}->{transactions}->{transaction}},
                 {mix => $mix,
                 rt_avg => $rt_avg,
@@ -507,7 +606,7 @@ Returns sar data transformed into XML.
 =cut
 sub to_xml {
     my $self = shift;
-    return XMLout({%{$self->{data}}}, RootName => 'dbt2',
+    return XMLout({%{$self->{data}}}, RootName => 'dbt5',
             OutputFile => "$self->{outdir}/result.xml");
 }
 
@@ -548,15 +647,12 @@ __END__
 
 Mark Wong <markw@osdl.org>
  
-September 2006
-- response time sort to use numeric sort not ascii
-- 90th percentile sort to use numeric sort
-Richard Kennedy EnterpriseDB
-
 =head1 COPYRIGHT
 
 Copyright (C) 2006 Mark Wong & Open Source Development Labs, Inc.
 All Rights Reserved.
+
+2006 Rilson Nascimento
 
 This script is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

@@ -44,7 +44,7 @@ use fields qw(
               );
 
 use vars qw( %FIELDS $AUTOLOAD $VERSION );
-our $VERSION = '1.4';
+our $VERSION = '1.5.1';
 
 =head2 new()
 
@@ -381,7 +381,10 @@ sub parse_mix {
                     print "error with mix.log format\n";
                     exit(1);
                 }
-                ++$total_transaction_count;
+                if ($transaction ne '10' and $transaction ne '10R' and
+                        $transaction ne 'E') {
+                    ++$total_transaction_count;
+                }
             }
         } elsif (scalar(@word) == 2) {
             #
@@ -394,11 +397,10 @@ sub parse_mix {
     }
     close(FILE);
     #
-    # Calculated the number of New Order transactions per second.
+    # Calculated the number of Trade Result transactions per second.
     #
-    my $tps = $transaction_count{'1'} /
+    $self->{data}->{metric} = $transaction_count{'1'} /
             ($current_time - $self->{data}->{steady_state_start_time});
-    $self->{data}->{metric} = $tps * 60.0;
     $self->{data}->{duration} =
             ($current_time - $self->{data}->{steady_state_start_time}) / 60.0;
     $self->{data}->{rampup} = $self->{data}->{steady_state_start_time} -
@@ -488,7 +490,8 @@ sub parse_mix {
     # Summarize the transaction statistics into the hash structure for XML.
     #
     $self->{data}->{transactions}->{transaction} = [];
-    foreach my $idx ('0', '1', '2', '3', '4','5','6','7','8','9','10') {
+    foreach my $idx ('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10') {
+        # Yes, $mix is not valid for Data Maintenance ($idx == '10').
         my $mix = ($transaction_count{$idx} + $rollback_count{$idx}) /
                 $total_transaction_count * 100.0;
         my $rt_avg = 0;
@@ -645,14 +648,15 @@ __END__
 
 =head1 AUTHOR
 
-Mark Wong <markw@osdl.org>
+Mark Wong <markwkm@gmail.com>
  
 =head1 COPYRIGHT
 
-Copyright (C) 2006 Mark Wong & Open Source Development Labs, Inc.
+Copyright (C) 2006-2008 Mark Wong & Open Source Development Labs, Inc.
 All Rights Reserved.
 
-2006 Rilson Nascimento
+Copyright (C) 2006 Rilson Nascimento
+All Rights Reserved.
 
 This script is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

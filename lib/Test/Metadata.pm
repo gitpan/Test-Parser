@@ -62,7 +62,7 @@ use fields qw(
              );
 
 use vars qw( %FIELDS $VERSION );
-our $VERSION = '1.3';
+our $VERSION = '1.5.1';
 
 =head2 new()
 

@@ -1,6 +1,11 @@
 Revision history for Test-Parser.
 
 HEAD
+	Mark Wong:
+	- Fixed the metric calculation for DBT-5.
+	- Fixed the mix percentage reporting for DBT-5.
+
+1.4
 	Richard Kennedy:
 	- Fix use of default sort ordering, which was ascii sort not numeric sort
 	  effects the way NO90 is reported

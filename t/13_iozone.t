@@ -9,9 +9,9 @@ $logfile =~ s/t$/log/;
 ok ( -e "./$logfile", "Verifying existance of $logfile")
    or diag("No log file found for '$0'");
 
-use Test::Parser::Iozone;
+use Test::Parser::iozone;
 
-my $parser = new Test::Parser::Iozone;
+my $parser = new Test::Parser::iozone;
 $parser->parse($logfile);
 
 my $h = $parser->data();

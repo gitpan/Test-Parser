@@ -83,7 +83,7 @@ use fields qw(
               );
 
 use vars qw( %FIELDS $VERSION );
-our $VERSION = '1.5.1';
+our $VERSION = '1.5.2';
 use constant END_OF_RECORD => 100;
 
 =head2 new()

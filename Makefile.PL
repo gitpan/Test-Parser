@@ -21,7 +21,6 @@ my %opts = (
                 'Getopt::Long'   => 0,
                 'XML::Twig'      => 0,
                 'XML::Simple'    => 0,
-                'Chart::Graph::Gnuplot'  => 0,
                 'CGI'            => 0,
             },
 );

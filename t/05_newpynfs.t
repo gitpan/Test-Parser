@@ -9,9 +9,9 @@ $logfile =~ s/t$/log/;
 ok ( -e "./$logfile", "Verifying existance of $logfile")
    or diag("No log file found for '$0'");
 
-use Test::Parser::NewPyNfs;
+use Test::Parser::newpynfs;
 
-my $parser = new Test::Parser::NewPyNfs;
+my $parser = new Test::Parser::newpynfs;
 $parser->parse($logfile);
 
 ok ($parser->num_executed() == 578, "Executed count");

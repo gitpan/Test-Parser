@@ -6,10 +6,10 @@
 
 use strict;
 use warnings;
-use Test::Parser::NewPyNfs;
+use Test::Parser::newpynfs;
 
-my $parser = new Test::Parser::NewPyNfs
-    or die "Couldn't create Test::Parser::NewPyNfs object\n";
+my $parser = new Test::Parser::newpynfs
+    or die "Couldn't create Test::Parser::newpynfs object\n";
 
 $parser->parse($ARGV[0] or \*STDIN)
     or die "Could not parse newpynfs log.\n";

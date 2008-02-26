@@ -9,9 +9,9 @@ $logfile =~ s/t$/log/;
 ok ( -e "./$logfile", "Verifying existance of $logfile")
    or diag("No log file found for '$0'");
 
-use Test::Parser::LHCS;
+use Test::Parser::lhcs_regression;
 
-my $parser = new Test::Parser::LHCS;
+my $parser = new Test::Parser::lhcs_regression;
 $parser->parse($logfile);
 
 ok ($parser->num_executed() == 6, "Executed count");

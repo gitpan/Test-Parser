@@ -6,10 +6,10 @@
 
 use strict;
 use warnings;
-use Test::Parser::LTP;
+use Test::Parser::ltp;
 
-my $parser = new Test::Parser::LTP
-    or die "Couldn't create Test::Parser::LTP object\n";
+my $parser = new Test::Parser::ltp
+    or die "Couldn't create Test::Parser::ltp object\n";
 
 $parser->parse($ARGV[0] or \*STDIN)
     or die "Could not parse ltp log.\n";

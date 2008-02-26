@@ -24,7 +24,7 @@ eval 'exec /usr/bin/perl -w -S $0 ${1+"$@"}'
 
 use strict;
 use warnings;
-use Test::Parser::Iozone;
+use Test::Parser::iozone;
 use Pod::Usage;
 use Getopt::Long qw(:config no_ignore_case bundling); ;
 
@@ -84,8 +84,8 @@ Displays text describing the version of the script
 sub version_and_exit
 {
     my $NAME = $0;
-    my $VERSION = Test::Parser::Iozone->VERSION;
-    print "$NAME.  Test::Parser::Iozone version $VERSION\n";
+    my $VERSION = Test::Parser::iozone->VERSION;
+    print "$NAME.  Test::Parser::iozone version $VERSION\n";
     print "Copyright (C) 2006 Bryce W. Harrington <bryce\@bryceharrington.org>\n";
     print "This program is free software; you can redistribute it and/or\n";
     print "modify it under the same terms as Perl itself.\n";
@@ -104,8 +104,8 @@ sub main {
         my $input_stream;
 
         # If the user has specified multi-record operation, we can't
-        # rely on T:P:Iozone's file open code and must work with 
-        # streams, because we'll be creating multiple T:P:Iozone 
+        # rely on T:P:iozone's file open code and must work with 
+        # streams, because we'll be creating multiple T:P:iozone 
         # objects per file.  
 
         # Open the file for streaming
@@ -125,8 +125,8 @@ sub main {
         # Now iterate over the contents of the stream as long as
         # there are more records
         while ($retval == Test::Parser::END_OF_RECORD){
-            my $parser = new Test::Parser::Iozone
-                or die "Couldn't create Test::Parser::Iozone object\n";
+            my $parser = new Test::Parser::iozone
+                or die "Couldn't create Test::Parser::iozone object\n";
             $retval = $parser->parse($input_stream);
 
             # This is a total hack, but we can do better once TRPI is implemented...
@@ -179,7 +179,7 @@ sub main {
         # generate graph showing the given data point from each run,
         # with X axis being the software version, and Y being Kbytes/sec
 
-        Test::Parser::Iozone::historical_plot(\@parsers, \@opt_file_sizes, \@opt_record_sizes);
+        Test::Parser::iozone::historical_plot(\@parsers, \@opt_file_sizes, \@opt_record_sizes);
     }
 
     # Generate comparison report of two or more runs
@@ -191,7 +191,7 @@ sub main {
             warn "Error:  Names must be specified for each run.\n";
             warn "        Use --comp-names=name1,name2,...\n"
         } else {
-            Test::Parser::Iozone::comparison_plot(\@parsers, \@opt_comp_names, 
+            Test::Parser::iozone::comparison_plot(\@parsers, \@opt_comp_names, 
                                                   \@opt_file_sizes, \@opt_record_sizes);
         }
     }
@@ -199,7 +199,7 @@ sub main {
     # Generate general summary (text) report
     if (! $opt_no_summary) {
         warn "Printing summary report\n" if $opt_debug>2;
-        print Test::Parser::Iozone::summary_report(\@parsers);
+        print Test::Parser::iozone::summary_report(\@parsers);
     }
 
     return 0;
@@ -262,6 +262,6 @@ See B<treport> -h for a summary of options.
 
 L<Pod::Usage>,
 L<Getopt::Long>,
-L<Test::Parser::Iozone>
+L<Test::Parser::iozone>
 
 

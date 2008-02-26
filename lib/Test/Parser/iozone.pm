@@ -42,7 +42,7 @@ use fields qw(
               );
 
 use vars qw( %FIELDS $AUTOLOAD $VERSION );
-our $VERSION = '1.5.3';
+our $VERSION = '1.6';
 
 use constant IOZONE_HEADERS => 
     ( 'KB', 'reclen', 'write', 'rewrite', 'read', 

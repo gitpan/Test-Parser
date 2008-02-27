@@ -83,7 +83,7 @@ use fields qw(
               );
 
 use vars qw( %FIELDS $VERSION );
-our $VERSION = '1.6';
+our $VERSION = '1.6.1';
 use constant END_OF_RECORD => 100;
 
 =head2 new()
@@ -95,7 +95,7 @@ Creates a new Test::Parser object.
 sub new {
     my $this = shift;
     my $class = ref($this) || $this;
-    my $self = bless [\%FIELDS], $class;
+    my $self = bless {%FIELDS}, $class;
 
     $self->{path}          = 0;
     $self->{units}         = $class;

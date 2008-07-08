@@ -5,7 +5,7 @@ my %opts = (
             'NAME'          => "Test::Parser",
             'AUTHOR'        => "Bryce Harrington <bryce\@osdl.org>",
             'ABSTRACT_FROM' => "lib/Test/Parser.pm",
-            'VERSION'       => '1.7',
+            'VERSION'       => '1.8',
             'EXE_FILES'     => [ qw(
                                      scripts/kernel2trpi
                                      scripts/parse_build_kernel

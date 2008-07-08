@@ -9,19 +9,19 @@ $logfile =~ s/t$/log/;
 ok ( -e "./$logfile", "Verifying existance of $logfile")
    or diag("No log file found for '$0'");
 
-use Test::Parser::Iostat;
+use Test::Parser::Mpstat;
 
-my $parser = new Test::Parser::Iostat;
+my $parser = new Test::Parser::Mpstat;
 $parser->parse($logfile);
 
 my $h = $parser->data();
-my @a = @{$h->{iostat}->{data}};
+my @a = @{$h->{mpstat}->{data}};
 
 my $realized;
 my $expected;
 
 $realized = scalar @a;
-$expected = 8989;
+$expected = 660;
 ok ($realized == $expected,
     "Data count: expected $expected, realized $realized");
 

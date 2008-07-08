@@ -110,7 +110,7 @@ sub parse_line {
 
     my @i = split / +/, $line;
     my $count = scalar @i;
-    if ($count == 14) {
+    if ($count == 12) {
         #
         # This is either the iostat headers or the data.  If it's a header
         # skip to the next line and increment the counter.
@@ -128,7 +128,7 @@ sub parse_line {
         #
         $self->{device} = $line;
         return 1;
-    } elsif ($count == 13) {
+    } elsif ($count == 11) {
         #
         # Put $self->{device} in front of @i
         #
@@ -148,12 +148,11 @@ sub parse_line {
     #
     # If $self->{elapsed_time} == 0 then zero the data out since it's bogus.
     #
-    @i = ($i[0], 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+    @i = ($i[0], 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
             if ($self->{elapsed_time} == 0);
     push @{$self->{data}}, {device => $i[0], rrqm => $i[1], wrqm => $i[2],
-            r => $i[3], w => $i[4], rsec => $i[5], wsec => $i[6],
-            rkb => $i[7], wkb => $i[8], avgrq => $i[9], avgqu => $i[10],
-            await => $i[11], svctm => $i[12], util => $i[13],
+            r => $i[3], w => $i[4], rmb => $i[5], wmb => $i[6], avgrq => $i[7],
+            avgqu => $i[8], await => $i[9], svctm => $i[10], util => $i[11],
             elapsed_time => $self->{elapsed_time}};
 
     return 1;
@@ -167,7 +166,7 @@ Returns iostat data transformed into XML.
 sub to_xml {
     my $self = shift;
     my $outfile = shift;
-    return XMLout({data => $self->{data}}, RootName => 'vmstat');
+    return XMLout({data => $self->{data}}, RootName => 'iostat');
 }
 
 1;

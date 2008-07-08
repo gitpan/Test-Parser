@@ -18,7 +18,7 @@ foreach my $script (@scripts) {
         ok ( $?==0, "Verifying compilation of '$script'") or
            diag("Bash script '$script' failed");
     } elsif ($file_type =~ /perl script/) {
-        `perl -c $script`;
+        `$^X -c $script`;
         ok ( $?==0, "Verifying compilation of '$script'") or
             diag("Perl script '$script' failed");
     } else {

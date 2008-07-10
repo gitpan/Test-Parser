@@ -21,7 +21,7 @@ my $realized;
 my $expected;
 
 $realized = scalar @a;
-$expected = 660;
+$expected = 600;
 ok ($realized == $expected,
     "Data count: expected $expected, realized $realized");
 

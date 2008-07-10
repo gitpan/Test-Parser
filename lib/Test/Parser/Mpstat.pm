@@ -103,14 +103,15 @@ sub parse_line {
     # These should ignore the first header line.
     #
     return 1 if (scalar @i != 11);
-    return 1 if ($i[0] eq 'CPU');
+    return 1 if ($i[1] eq 'CPU');
     #
     # The first set of data doesn't appear to be garbage.
     #
     my $count = scalar @{$self->{data}};
-    push @{$self->{data}->{$i[1]}, {user => $i[2], nice => $i[3], sys => $i[4],
-            iowait => $i[5], irq => $i[6], soft => $i[6], steal => $i[7],
-            idle => $i[8], intrs => $i[9], elapsed_time => $count};
+    push @{$self->{data}}, {cpu => $i[1], user => $i[2], nice => $i[3],
+            sys => $i[4], iowait => $i[5], irq => $i[6], soft => $i[6],
+            steal => $i[7], idle => $i[8], intrs => $i[9],
+            elapsed_time => $count};
 
     return 1;
 }
